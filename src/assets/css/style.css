@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+
+
+.breadcrumb-item {
+    color: var(--color-slate-500);
+}
+
+.breadcrumb-item.active {
+    color: black;
+}
+
+.dark .breadcrumb-item.active {
+    color: white;
+}
+
+.breadcrumb-header {
+    background-color: var(--p-primary-300)
+}

@@ -1,0 +1,71 @@
+<template>
+    <Sidebar :active="'settings'" :project_key="project.project_key" />
+    <div style="margin-left: 60px;">
+        <div class="project-header flex items-center justify-between">
+            <div class="project-name flex items-center gap-2">
+                <p>{{ project.project_name }}</p>
+                <p class="text-[14px]">({{ project.project_key }})</p>
+            </div>
+        </div>
+        <div class="mt-4 mx-6">
+            <Tabs value="0">
+                <TabList>
+                    <Tab value="0">Cài đặt chung</Tab>
+                    <Tab value="1">Thành viên dự án</Tab>
+                    <Tab value="2">Kiểu issue</Tab>
+                    <Tab value="3">Trạng thái issue</Tab>
+                </TabList>
+                <TabPanels>
+                    <TabPanel value="0">
+                        <p class="m-0">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+                            consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                        </p>
+                    </TabPanel>
+                    <TabPanel value="1">
+                        <p class="m-0">
+                            Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim
+                            ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Consectetur, adipisci velit, sed quia non numquam eius modi.
+                        </p>
+                    </TabPanel>
+                    <TabPanel value="2">
+                        <p class="m-0">
+                            At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa
+                            qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.
+                        </p>
+                    </TabPanel>
+                </TabPanels>
+            </Tabs>
+        </div>
+    </div>
+</template>
+<script setup>
+import api from '@/api/axios';
+import Sidebar from '@/components/common/Sidebar.vue';
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primevue';
+
+const route = useRoute();
+const project_key = route.params.project_key;
+
+const project = ref({});
+
+async function getProject() {
+    try {
+        const response = await api.get('project/detail', {
+            params: {
+                project_key: project_key
+            }
+        })
+
+        project.value = response.data.project;
+    } catch (error) {
+        
+    }
+}
+
+onMounted(() => {
+    getProject();
+})
+</script>

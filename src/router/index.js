@@ -26,9 +26,22 @@ const router = createRouter({
           component: () => import('../views/client/workspace/members.vue'),
         },
         {
-          path: 'project',
+          path: 'project/:project_key',
           name: 'Project',
-          component: () => import('../views/client/project/index.vue')
+          component: () => import('../views/client/project/index.vue'),
+          props: true,
+        },
+        {
+          path: 'add/:project_key',
+          name: 'Add Project',
+          component: () => import('../views/client/project/add.vue'),
+          props: true,
+        },
+        {
+          path: 'settings/:project_key',
+          name: 'Project Settings',
+          component: () => import('../views/client/project/settings.vue'),
+          props: true,
         },
         {
           path: 'settings',

@@ -13,7 +13,7 @@
                     <div class="accordion-title flex justify-between">
                         <div class="toggle flex items-center gap-1.5" @click="toggleOpen('prj')">
                             <i class="pi " :class="isPrjOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
-                            <p>Project</p>
+                            <p>Dự án</p>
                         </div>
                         <div>
                             <Button class="btn-add" size="small" icon="pi pi-plus" rounded variant="outlined" v-tooltip.top="'Thêm Project'" v-if="userStore.role === 'admin'" v-show="isPrjOpen" @click="addProjectDialog = true"/>
@@ -80,9 +80,9 @@
                                 <thead>
                                     <tr>
                                         <th class="px-3 py-2 border">Key</th>
-                                        <th class="px-3 py-2 border">Subject</th>
-                                        <th class="px-3 py-2 border">Status</th>
-                                        <th class="px-3 py-2 border">Due</th>
+                                        <th class="px-3 py-2 border">Tiêu đề</th>
+                                        <th class="px-3 py-2 border">Trạng thái</th>
+                                        <th class="px-3 py-2 border">Ngày hạn</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -94,10 +94,13 @@
             </div>
             <div>
                 <div class="accordion">
-                    <div class="accordion-title" >
+                    <div class="accordion-title flex justify-between" >
                         <div class="toggle flex items-center gap-1.5" @click="toggleOpen('recent')">
                             <i class="pi " :class="isRecentOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
                             <p>Gần đây</p>
+                        </div>
+                        <div>
+                            <span>Lọc</span>
                         </div>
                     </div>
                     <div class="accordion-content" v-show="isRecentOpen">

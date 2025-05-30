@@ -26,8 +26,6 @@ const props = defineProps({
   project_key: String,
 });
 
-console.log('Sidebar props.project_key:', props.project_key);
-
 const items = computed(() => {
   if (!props.project_key) return [];
 

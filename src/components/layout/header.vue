@@ -22,8 +22,8 @@
                                 </div>
                             </div>
                             <li class="action-item" v-if="!isProjectLoading">
-                                <template v-for="project in projects" :key="project.id" v-if="projects.length > 0">
-                                    <RouterLink :to="`/workspace/project/${project.project_key}`" class="p-2">
+                                <template v-for="project in projects" :key="project.id" v-if="projects.length != 0">
+                                    <RouterLink :to="`/workspace/project/${project.project_key}`" class="py-4 border-t-2 border-gray-200">
                                         <div class="flex items-center gap-2">
                                             <div class="text-center">{{ project.project_name }}
                                                 <span class="text-[12px] font-light italic">({{ project.project_key }})</span>
@@ -61,7 +61,12 @@
                     </ul>
                 </li>
                 <li>
-                    <Button class="icon-button" icon="pi pi-bell" variant="text" rounded/>
+                    <Button class="icon-button" icon="pi pi-bell" variant="text" rounded @click="isNotification = true"/>
+                    <Drawer v-model:visible="isNotification" position="right">
+                        <template #header>
+                            <p>Thông báo</p>
+                        </template>
+                    </Drawer>
                 </li>
                 <li class="flex items-center">
                     <div v-if="!userStore.isLoading">
@@ -108,7 +113,7 @@
     </div>
 </template>
 <script setup>
-import { Button, IconField, InputIcon, InputText } from 'primevue';
+import { Button, IconField, InputIcon, InputText, Drawer } from 'primevue';
 import { ref, onMounted } from 'vue';
 import Configurator from '../common/Configurator.vue';
 import { useRouter } from 'vue-router';
@@ -123,7 +128,7 @@ const isUserProfile = ref(false);
 const isProject = ref(false);
 const searchPrj = ref('');
 const isProjectLoading = ref(false);
-
+const isNotification = ref(false);
 const projects = ref([]);
 
 function toggleWorkspaceAction() {

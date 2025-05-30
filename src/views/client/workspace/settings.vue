@@ -134,7 +134,46 @@
                     </div>
                 </div>
                 <div class="invite-member" v-if="activeSetting == 'invite-member'">
-                    Invite member page
+                    <div class="flex items-center gap-4 my-4">
+                        <p class="text-2xl font-semibold">Danh sách thành viên được mời</p>
+                        <Button></Button>
+                    </div>
+                    <div>
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr>
+                                    <th class="px-3 py-2 border">#</th>
+                                    <th class="px-3 py-2 border">Email</th>
+                                    <th class="px-3 py-2 border">Người mời</th>
+                                    <th class="px-3 py-2 border">Vai trò (Role)</th>
+                                    <th class="px-3 py-2 border">Trạng thái</th>
+                                    <th class="px-3 py-2 border">Ngày tạo</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-center">
+                                <template v-for="(invite, index) in inviteMembers" :key="invite.id">
+                                    <tr class="hover:bg-gray-100 cursor-default">
+                                        <td class="px-3 py-2">{{ index + 1 }}</td>
+                                        <td class="px-3 py-2">{{ invite.email }}</td>
+                                        <td class="px-3 py-2">{{ invite.inviter.username }}</td>
+                                        <td class="px-3 py-2">{{ invite.role }}</td>
+                                        <td class="px-3 py-2">
+                                            <span v-if="invite.status == 'pending'" class="block px-2 py-1 rounded-md bg-yellow-500 text-white">
+                                                Chờ xác nhận
+                                            </span>
+                                            <span v-if="invite.status == 'accepted'" class="block px-2 py-1 rounded-md bg-green-500 text-white">
+                                                Đã chấp nhận
+                                            </span>
+                                            <span v-if="invite.status == 'rejected'" class="block px-2 py-1 rounded-md bg-red-500 text-white">
+                                                Đã từ chối
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-2">{{ dayjs(invite.created_at).format('DD/MM/YYYY HH:mm') }}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="project" v-if="activeSetting == 'project'">
                     Project page
@@ -173,6 +212,8 @@ const members = ref();
 const newMemberEmail = ref('');
 const role = ref('');
 
+const inviteMembers = ref([]);
+
 //Function Handle UI
 function setActive(setting) {
     if (activeSetting.value === setting) return
@@ -187,6 +228,9 @@ function setActive(setting) {
             break;
         case 'member':
             getMembers();
+            break;
+        case 'invite-member':
+            getInviteMembers();
             break;
         case 'project':
 
@@ -216,6 +260,25 @@ async function getMembers() {
     } catch (error) {
         console.log(error.message);
                 
+    } finally {
+        isLoading.value = false;
+    }
+}
+
+async function getInviteMembers() {
+    try {
+        isLoading.value = true;
+        const response = await api.get('/workspace/invites/get', {
+            params: {
+                workspace_id: workspace.value.id
+            }
+        })
+
+        const data = response.data;
+        inviteMembers.value = data.invites;
+        console.log(data);
+    } catch (error) {
+        console.log(error.message);
     } finally {
         isLoading.value = false;
     }

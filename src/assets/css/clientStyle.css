@@ -124,7 +124,7 @@
         padding-right: 1.5rem;
     }
     a:hover {
-        background-color: var(--p-button-text-primary-hover-background);
+        background-color: var(--p-primary-100);
     }
 
     &.specials {

@@ -52,16 +52,23 @@
                     </TabPanel>
                     <TabPanel value="2">
                         <div v-if="!workspace" class="m-4">
-                            Bạn chưa có Workspace
-                            <RouterLink to="create_workspace">
-                                <Button label="Tạo mới" icon="pi pi-plus" variant="text"/>
-                            </RouterLink>
+                            <div class="flex justify-around items-center gap-2">
+                                <p>
+                                    Bạn chưa có Workspace
+                                </p>
+                                <RouterLink to="create_workspace">
+                                    <Button label="Tạo mới" icon="pi pi-plus" variant="text"/>
+                                </RouterLink>
+                            </div>
                         </div>
-                        <div class="flex gap-4 items-center" v-else>
-                            <div>{{ workspace.workspace_name }}</div>
-                            <RouterLink to="/workspace/dashboard">
-                                <Button label="Đi tới Dasboard" icon="pi pi-arrow-up-right"/>
-                            </RouterLink>
+                        <div v-else>
+                            <p class="text-center text-2xl font-semibold">Thông tin workspace</p>
+                            <div class="flex justify-around items-center gap-2 mt-4">
+                                <div class="text-lg">Workspace: <span class="font-semibold">{{ workspace_name }}</span></div>
+                                <RouterLink to="/workspace/dashboard">
+                                    <Button label="Đi tới Dasboard" icon="pi pi-arrow-up-right"/>
+                                </RouterLink>
+                            </div>
                         </div>
                     </TabPanel>
                 </TabPanels>
@@ -78,6 +85,8 @@ const router = useRouter();
 const userStore = useUserStore();
 
 const workspace = userStore.workspace;
+const workspace_name = workspace.workspace_name;
+
 const user = userStore.user;
 const username = user.username;
 const email = user.email;

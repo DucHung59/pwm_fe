@@ -19,6 +19,12 @@ export const useUserStore = defineStore('user', {
       try {
         const res = await api.get('/user');
         this.user = res.data;
+
+        if (res.data) {
+          const resWorkspace = await api.get('/workspace');
+          this.workspace = resWorkspace.data.workspace;
+          this.role = resWorkspace.data.role;
+        }
       } catch {
         this.user = null;
       } finally {

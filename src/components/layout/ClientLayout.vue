@@ -6,10 +6,10 @@
 </template>
 <style src="../../assets/css/clientStyle.css"></style>
 <script setup>
-import Breadcumbs from '@/components/common/Breadcumbs.vue';
 import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Header from './header.vue';
+
 
 const route = useRoute();
 

@@ -1,7 +1,7 @@
 <template>
     <div class="header px-4 py-2 flex items-center justify-between gap-4">
         <div class="left-header flex items-center gap-4">
-            <img src="https://placehold.co/400x400" alt="" width="40px">
+            <img src="../../../../public/app_icon.png" alt="" width="40px">
             <div class="navbar">
                 <ul class="flex gap-2">
                     <li>

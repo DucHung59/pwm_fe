@@ -134,9 +134,6 @@
     </Tabs>
 </template>
 <script setup>
-import { ref, watch } from 'vue';
-import { toastService } from '@/assets/js/toastHelper';
-import { useToast } from 'primevue/usetoast';
 import { useUserStore } from '@/store/user';
 
 import Button from 'primevue/button';
@@ -148,31 +145,6 @@ import TabPanel from 'primevue/tabpanel';
 import Card from 'primevue/card'
 import Footer from '@/components/layout/footer.vue'
 
-const title = ref('');
-const message = ref('');
-const toast = new toastService(useToast());
-const isTitleValid = ref(false)
-const isMessValid = ref(false)
-
-
 const userStore = useUserStore();
-
-function validate() {
-    if(message.value == '') {
-        isMessValid.value = true
-    }
-    if(title.value == '') {
-        isTitleValid.value = true
-    }
-    return isMessValid.value || isTitleValid.value
-
-}
-
-watch([title, message], () => {
-    isTitleValid.value = false;
-    isMessValid.value = false
-})
-
-
 
 </script>

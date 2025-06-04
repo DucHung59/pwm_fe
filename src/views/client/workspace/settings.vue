@@ -109,7 +109,7 @@
                         </div>
                     </Dialog>
                     <div>
-                        <table class="w-full text-sm">
+                        <table class="w-full text-sm tr-border">
                             <thead>
                                 <tr>
                                     <th class="px-3 py-2 border">#</th>
@@ -139,7 +139,7 @@
                         <Button></Button>
                     </div>
                     <div>
-                        <table class="w-full text-sm">
+                        <table class="w-full text-sm tr-border">
                             <thead>
                                 <tr>
                                     <th class="px-3 py-2 border">#</th>
@@ -147,7 +147,7 @@
                                     <th class="px-3 py-2 border">Người mời</th>
                                     <th class="px-3 py-2 border">Vai trò (Role)</th>
                                     <th class="px-3 py-2 border">Trạng thái</th>
-                                    <th class="px-3 py-2 border">Ngày tạo</th>
+                                    <th class="px-3 py-2 border">Ngày mời</th>
                                 </tr>
                             </thead>
                             <tbody class="text-center">

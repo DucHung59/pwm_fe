@@ -1,7 +1,7 @@
 <template>
     <div class="px-10 pt-8">
         <div class="flex justify-center items-center gap-4 pt-4 pb-10" v-if="userStore.role === 'admin'">
-            <img src="https://placehold.co/400x400" alt="hehee" width="60px"/>
+            <img src="../../../../public/app_icon.png" alt="hehee" width="60px"/>
             <p class="text-[24px] font-semibold">{{ workspace.workspace_name }}</p>
             <RouterLink to="settings">
                 <Button icon="pi pi-cog" rounded variant="outlined" severity="contrast"/>
@@ -48,7 +48,11 @@
                                             </p>
                                             <div class="text-[12px] list-action hidden group-hover:block">
                                                 <ul class="flex gap-2">
-                                                    <li>Thêm Issue</li>
+                                                    <li>
+                                                        <RouterLink :to="'/workspace/add/' + project.project_key">
+                                                            Thêm Issue
+                                                        </RouterLink>
+                                                    </li>
                                                     <li>Issues</li>
                                                     <li>Cài đặt</li>
                                                 </ul>
@@ -76,7 +80,7 @@
                             </div>
                         </div>
                         <div class="issue-item">
-                            <table class="w-full text-sm">
+                            <table class="w-full text-sm tr-border">
                                 <thead>
                                     <tr>
                                         <th class="px-3 py-2 border">Key</th>

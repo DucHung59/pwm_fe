@@ -1,7 +1,7 @@
 <template>
     <div class="px-10 pt-8">
         <div class="flex justify-center items-center gap-4 pt-4 pb-10" v-if="userStore.role === 'admin'">
-            <img src="../../../../public/app_icon.png" alt="hehee" width="60px"/>
+            <img :src="'/app_icon.png'" alt="hehee" width="60px"/>
             <p class="text-[24px] font-semibold">{{ workspace.workspace_name }}</p>
             <RouterLink to="settings">
                 <Button icon="pi pi-cog" rounded variant="outlined" severity="contrast"/>
@@ -40,7 +40,7 @@
                             <div class="accordion-item">
                                 <RouterLink class="relative group w-max" :to="`project/${project.project_key}`">
                                     <div class="project-item gap-2 flex">
-                                        <img src="https://placehold.co/400x400" width="40px"/>
+                                        <img :src="'/project.png'" width="40px"/>
                                         <div>
                                             <p>{{ project.project_name }}</p>
                                             <p class="text-[12px] project-key absolute group-hover:hidden" style="color: var(--color-gray-500);">

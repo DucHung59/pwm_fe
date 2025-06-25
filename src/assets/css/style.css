@@ -16,3 +16,11 @@
 .breadcrumb-header {
     background-color: var(--p-primary-300)
 }
+
+.p-skeleton {
+    background-color: var(--p-primary-500) !important; /* màu nền chính */
+}
+  
+.p-skeleton::after {
+background: linear-gradient(90deg, transparent, var(--p-primary-500), transparent) !important;
+}

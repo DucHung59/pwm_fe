@@ -176,7 +176,37 @@
                     </div>
                 </div>
                 <div class="project" v-if="activeSetting == 'project'">
-                    Project page
+                    <div>
+                        <p class="text-2xl font-semibold">Danh sách dự án <span class="text-sm text-gray-500">( {{ projects.length }} )</span></p>
+                    </div>
+                    <div>
+                        <table class="w-full text-sm tr-border">
+                            <thead>
+                                <tr>
+                                    <th class="px-3 py-2 border">#</th>
+                                    <th class="px-3 py-2 border">Tên dự án</th>
+                                    <th class="px-3 py-2 border">Cài đặt</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-center">
+                                <template v-for="(project, index) in projects" :key="project.id">
+                                    <tr class="hover:bg-gray-100 cursor-default">
+                                        <td class="px-3 py-2">{{ index + 1 }}</td>
+                                        <td class="px-3 py-2">
+                                            {{ project.project_name }} 
+                                            <span class="text-sm">({{ project.project_key }})</span>
+                                        </td>
+                                        <td class="px-3 py-2 flex gap-2 justify-center">
+                                            <RouterLink :to="'project/' + project.project_key">
+                                                <Button label="Tới" icon="pi pi-arrow-up-right" iconPos="right" size="small"/>
+                                            </RouterLink>
+                                            <Button label="Xóa" icon="pi pi-trash" size="small" iconPos="right" severity="danger"/>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div v-else>
@@ -211,6 +241,7 @@ const emailValid = ref(false);
 const members = ref();
 const newMemberEmail = ref('');
 const role = ref('');
+const projects = ref([]);
 
 const inviteMembers = ref([]);
 
@@ -233,7 +264,7 @@ function setActive(setting) {
             getInviteMembers();
             break;
         case 'project':
-
+            getProjects();
             break;
         default:
             break;
@@ -310,6 +341,21 @@ async function inviteMember() {
         isInviteMemberLoading.value = false;
     }
 }
+
+async function getProjects() {
+    try {
+        isLoading.value = true;
+        const response = await api.get('/project/get')
+        projects.value = response.data.projects;
+        console.log(projects.value);
+    } catch (error) {
+        console.log(error.message);
+        
+    } finally {
+        isLoading.value = false;
+    }
+}
+
 
 watch(newMemberEmail, (newVal) => {
     emailValid.value = false;

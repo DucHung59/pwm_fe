@@ -3,7 +3,7 @@
     <div style="margin-left: 60px;">
         <div class="project-header flex items-center justify-between">
             <div class="flex items-center gap-2" v-if="!project.project_name">
-                <Skeleton class="w-10 h-10 rounded-full" />
+                <Skeleton class="mb-2"></Skeleton>
             </div>
             <div class="project-name flex items-center gap-2" v-else>
                 <p>{{ project.project_name }}</p>

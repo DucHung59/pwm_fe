@@ -14,7 +14,9 @@
                             <div class="relative w-max">
                                 <div class="group-hover:hidden">
                                     <p class="text-[14px] font-light">({{ member.role }})</p>
-                                    <p>{{ member.user.email }}</p>
+                                    <p class="text-sm text-center break-all max-w-[180px]" :title="member.user.email">
+                                        {{ member.user.email.split('@')[0] }}
+                                    </p>
                                 </div>
                                 <RouterLink to="workspace/activty">
                                     <div class="activity-link px-8 py-2 hidden group-hover:block">

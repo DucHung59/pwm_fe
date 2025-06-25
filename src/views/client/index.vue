@@ -35,7 +35,7 @@
                         <div class="flex flex-col items-center justify-center  py-24">
                             <p class="text-[36px] font-semibold">Tất cả trong MỘT</p>
                             <p class="text-[24px] mt-4">Quản lý dự án, nhiệm vụ, mã nguồn, lỗi, và nhiều hơn nữa...</p>
-                            <Button class="mt-4 button">
+                            <Button class="mt-4 button" v-if="!isLogin">
                                 <RouterLink to="signup">
                                     Thử ngay
                                 </RouterLink>
@@ -146,5 +146,6 @@ import Card from 'primevue/card'
 import Footer from '@/components/layout/footer.vue'
 
 const userStore = useUserStore();
+const isLogin = userStore.isLoggedIn;
 
 </script>

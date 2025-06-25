@@ -51,7 +51,7 @@
                     <TabPanel value="1">
                     </TabPanel>
                     <TabPanel value="2">
-                        <div v-if="!workspace" class="m-4">
+                        <div v-if="workspace == null" class="m-4">
                             <div class="flex justify-around items-center gap-2">
                                 <p>
                                     Bạn chưa có Workspace
@@ -64,7 +64,7 @@
                         <div v-else>
                             <p class="text-center text-2xl font-semibold">Thông tin workspace</p>
                             <div class="flex justify-around items-center gap-2 mt-4">
-                                <div class="text-lg">Workspace: <span class="font-semibold">{{ workspace_name }}</span></div>
+                                <div class="text-lg">Workspace: <span class="font-semibold">{{ workspace.workspace_name }}</span></div>
                                 <RouterLink to="/workspace/dashboard">
                                     <Button label="Đi tới Dasboard" icon="pi pi-arrow-up-right"/>
                                 </RouterLink>
@@ -85,7 +85,6 @@ const router = useRouter();
 const userStore = useUserStore();
 
 const workspace = userStore.workspace;
-const workspace_name = workspace.workspace_name;
 
 const user = userStore.user;
 const username = user.username;

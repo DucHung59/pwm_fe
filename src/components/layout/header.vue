@@ -1,16 +1,16 @@
 <template>
     <div class="header px-4 py-2 flex items-center justify-between gap-4">
         <div class="left-header flex items-center gap-4">
-            <img src="../../../../public/app_icon.png" alt="" width="40px">
+            <img :src="'/app_icon.png'" alt="" width="40px">
             <div class="navbar">
                 <ul class="flex gap-2">
                     <li>
                         <Button class="button" variant="text">
-                            <RouterLink to="/workspace/dashboard">Dashboard</RouterLink>
+                            <RouterLink to="/workspace/dashboard">Trang chủ</RouterLink>
                         </Button>
                     </li>
                     <li>
-                        <Button class="button btn-project-list" variant="text" label="Project" @click="toggleProject"/>
+                        <Button class="button btn-project-list" variant="text" label="Dự án" @click="toggleProject"/>
                         <ul class="action-container" :class="{active : isProject}">
                             <div class="search-project flex items-center gap-2">
                                 <IconField>
@@ -102,7 +102,7 @@
                 <li>
                     <div class="workspace flex gap-4">
                         <button class="flex items-center gap-2">
-                            <img src="https://placehold.co/400x400" alt="" width="40px">
+                            <img :src="'/workspace.png'" alt="" width="40px">
                             <p style="color: var(--color-gray-500);">{{ userStore.workspace.workspace_name }}</p> 
                         </button>
                         <Configurator/>

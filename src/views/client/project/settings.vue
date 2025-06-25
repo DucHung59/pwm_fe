@@ -2,7 +2,10 @@
     <Sidebar :active="'settings'" :project_key="project.project_key" />
     <div style="margin-left: 60px;">
         <div class="project-header flex items-center justify-between">
-            <div class="project-name flex items-center gap-2">
+            <div class="flex items-center gap-2" v-if="!project.project_name">
+                <Skeleton class="w-10 h-10 rounded-full" />
+            </div>
+            <div class="project-name flex items-center gap-2" v-else>
                 <p>{{ project.project_name }}</p>
                 <p class="text-[14px]">({{ project.project_key }})</p>
             </div>

@@ -13,18 +13,18 @@
         <div class="m-16">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-2xl font-semibold">Thêm Issue</p>
+                    <p class="text-2xl font-semibold">Thêm Task</p>
                 </div>
                 <div>
-                    <Button label="Thêm Issue" />
+                    <Button :loading="isCreating" loadingIcon="pi pi-spin pi-spinner" label="Thêm Task" @click="addTask" />
                 </div>
             </div>
             <div class="mt-4">
                 <div class="flex flex-col gap-2">
                     <div>
-                        <Select v-model="selectedIssue" :options="issues" optionLabel="issue_type" optionValue="issue_type" placeholder="Chọn kiểu issue" class="w-full md:w-56" />
+                        <Select v-model="selectedIssue" :options="issues" optionLabel="issue_type" optionValue="id" placeholder="Chọn danh mục" class="w-full md:w-56" />
                     </div>
-                    <InputText v-model="issue_name" placeholder="Tên issue (bắt buộc)" class="w-full" />
+                    <InputText v-model="subject" placeholder="Tên công việc (bắt buộc)" class="w-full" />
                 </div>
                 <div class="mt-4 border border-gray-300 rounded-md p-4">
                     <div class="flex flex-col gap-2 my-4">
@@ -33,11 +33,11 @@
                     <div class="grid grid-cols-2 gap-8">
                         <div class="flex items-center justify-around gap-2 border-b border-gray-400 p-4">
                             <p>Trạng thái</p>
-                            <Select v-model="status" :options="statuses" optionLabel="status_name" placeholder="Chọn trạng thái" class="w-full md:w-56" />
+                            <Select v-model="selectedStatus" :options="statuses" optionLabel="status_type" optionValue="id" placeholder="Chọn trạng thái" class="w-full md:w-56" />
                         </div>
                         <div class="flex items-center justify-around gap-2 border-b border-gray-400 p-4">
-                            <p>Assignee</p>
-                            <Select v-model="assignee" :options="members.user" optionLabel="name" placeholder="Chọn assignee" class="w-full md:w-56" />
+                            <p>Người được giao</p>
+                            <Select v-model="assignee" :options="members" optionLabel="user.username" optionValue="user.id" placeholder="Chọn " class="w-full md:w-56" />
                         </div>
                         <div class="flex items-center justify-around gap-2 border-b border-gray-400 p-4">
                             <p>Hạn chót</p>
@@ -45,11 +45,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="my-4">
-                    <InputText v-model="notify_to" placeholder="Thông báo tới" class="w-full" />
-                </div>
-                <div class="flex justify-end">
-                    <Button label="Thêm Issue" />
+                <div class="flex justify-end my-4">
+                    <Button :loading="isCreating" loadingIcon="pi pi-spin pi-spinner" label="Thêm Task" @click="addTask" />
                 </div>
             </div>
         </div>
@@ -57,8 +54,9 @@
 </template>
 <script setup>
 import api from '@/api/axios';
+import { toastService } from '@/assets/js/toastHelper';
 import Sidebar from '@/components/common/Sidebar.vue';
-import { Button, Select, InputText, DatePicker } from 'primevue';
+import { Button, Select, InputText, DatePicker, useToast } from 'primevue';
 import Editor from 'primevue/editor';
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -68,36 +66,37 @@ const project_key = computed(() => route.params.project_key);
 
 const project = ref({});
 const issues = ref([]);
-const status = ref(null);
-const assignee = ref(null);
-const due_date = ref(null);
-const notify_to = ref(null);
-
-const statuses = ref([
-    {
-        status_name: 'Open',
-        status_color: '#FF0000'
-    },
-    {
-        status_name: 'Progress',
-        status_color: '#00FF00'
-    },
-    {
-        status_name: 'Review',
-        status_color: '#0000FF'
-    },
-    {
-        status_name: 'Resolved',
-        status_color: '#0000FF'
-    },
-    {
-        status_name: 'Closed',
-        status_color: '#000000'
-    }
-]);
+const statuses = ref([]);
 const members = ref([]);
+
+const subject = ref('')
 const selectedIssue = ref(null);
 const description = ref('');
+const selectedStatus = ref(null);
+const assignee = ref(null);
+const due_date = ref(null);
+
+const isCreating = ref(false);
+
+const toast = new toastService(useToast());
+
+function validated() {
+    const errors = [];
+
+    if (!subject.value.trim()) {
+        errors.push('Tiêu đề không được để trống');
+    }
+
+    if (!selectedIssue.value) {
+        errors.push('Vui lòng chọn loại danh mục');
+    }
+
+    if (!selectedStatus.value) {
+        errors.push('Vui lòng chọn trạng thái');
+    }
+
+    return errors;
+}
 
 async function getProject() {
     try {
@@ -109,9 +108,46 @@ async function getProject() {
 
         project.value = response.data.project;
         issues.value = response.data.issues;
+        statuses.value = response.data.statuses;
         members.value = response.data.project.members;
     } catch (error) {
-        
+        console.log(error.message);
+    }
+}
+
+async function addTask() {
+    const errors = validated();
+    if( errors.length > 0 ) {
+        errors.forEach(error => {
+            toast.error(error, "Chọn thông tin");
+        });
+        return;
+    }
+    
+    try {
+        isCreating.value = true;
+        const response = await api.post('task/create', {
+            project_id: project.value.id,
+            subject: subject.value,
+            project_key: project_key.value,
+            category: selectedIssue.value,
+            status: selectedStatus.value,
+            assignee: assignee.value,
+            description: description.value,
+            due_date: due_date.value,
+        })
+
+        const result = response.data;
+        if(result.success == true) {
+            console.log(result);
+            toast.success('Thêm mới thành công', 'Thông báo')
+        } else {
+            console.log(result.message);
+        }
+    } catch (error) {
+        console.log(error.message); 
+    } finally {
+        isCreating.value = false
     }
 }
 

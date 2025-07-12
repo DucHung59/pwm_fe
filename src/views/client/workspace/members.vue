@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col items-center pt-8">
         <div class="flex flex-col items-center">
-            <img src="https://placehold.co/400x400" alt="logo" width="80px">
+            <img :src="'/app_icon.png'" alt="logo" width="80px">
             <p class="text-[24px] font-semibold pt-4">Thành viên của {{ workspace.workspace_name }}</p>
         </div>
         <div class="grid grid-cols-6 gap-4 mt-12" v-if="!isLoading">
@@ -58,7 +58,7 @@ async function getAllMembers() {
         })
 
         const data = res.data;
-        members.value = data.members;
+        members.value = data.members.data;
         console.log(members.value);
         
     } catch (error) {

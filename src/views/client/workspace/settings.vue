@@ -131,6 +131,12 @@
                                 </template>
                             </tbody>
                         </table>
+                        <Paginator
+                            :rows="perPage"
+                            :totalRecords="total"
+                            :first="(currentPage - 1) * perPage"
+                            @page="(event) => onPageChange(event, 'member')"
+                        />
                     </div>
                 </div>
                 <div class="invite-member" v-if="activeSetting == 'invite-member'">
@@ -173,6 +179,12 @@
                                 </template>
                             </tbody>
                         </table>
+                        <Paginator
+                            :rows="perPage"
+                            :totalRecords="total"
+                            :first="(currentPage - 1) * perPage"
+                            @page="(event) => onPageChange(event, 'invite-member')"
+                        />
                     </div>
                 </div>
                 <div class="project" v-if="activeSetting == 'project'">
@@ -221,7 +233,7 @@
 import api from '@/api/axios';
 import { ref, watch } from 'vue';
 import { useUserStore } from '@/store/user';
-import { Button, Dialog, InputText, Message, RadioButton, useToast } from 'primevue';
+import { Button, Dialog, InputText, Message, RadioButton, useToast, Paginator } from 'primevue';
 import dayjs from 'dayjs';
 import { toastService } from '@/assets/js/toastHelper';
 
@@ -236,6 +248,10 @@ const toast = new toastService(useToast());
 const isInviteMemberLoading = ref(false);
 const openAddMemberDialog = ref(false);
 const emailValid = ref(false);
+
+const currentPage = ref(1);
+const total = ref(0);
+const perPage = 10;
 
 //Data
 const members = ref();
@@ -271,23 +287,52 @@ function setActive(setting) {
     }
 }
 
+function onPageChange(event, setting){
+    const page = event.page + 1;
+    switch (setting) {
+        case 'space':
+            //call api
+            break;
+        case 'info':
+            break;
+        case 'email':
+            break;
+        case 'member':
+            getMembers(page);
+            break;
+        case 'invite-member':
+            getInviteMembers(page);
+            break;
+        case 'project':
+            getProjects(page);
+            break;
+        default:
+            break;
+    }
+}
+
 function validateEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 }
 
 //Function handle api
-async function getMembers() {
+async function getMembers(page = 1) {
     try {
         isLoading.value = true;
         const response = await api.get('/workspace/members', {
             params: {
-                workspaceId: workspace.value.id
+                workspaceId: workspace.value.id,
+                page: page
             }
         })
 
         const data = response.data;
-        members.value = data.members;
+        members.value = data.members.data;
+        total.value = data.members.total;
+        currentPage.value = data.members.current_page;
+        console.log(total.value, currentPage.value);
+        
     } catch (error) {
         console.log(error.message);
                 
@@ -296,17 +341,20 @@ async function getMembers() {
     }
 }
 
-async function getInviteMembers() {
+async function getInviteMembers(page = 1) {
     try {
         isLoading.value = true;
         const response = await api.get('/workspace/invites/get', {
             params: {
-                workspace_id: workspace.value.id
+                workspace_id: workspace.value.id,
+                page: page
             }
         })
 
         const data = response.data;
-        inviteMembers.value = data.invites;
+        inviteMembers.value = data.invites.data;
+        total.value = data.invites.total;
+        currentPage.value = data.invites.current_page;
         console.log(data);
     } catch (error) {
         console.log(error.message);

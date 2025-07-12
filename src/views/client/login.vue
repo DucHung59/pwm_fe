@@ -1,42 +1,46 @@
 <template>
-    <div class="header flex items-center justify-between px-4">
-        <RouterLink to="/">
-            <img src="https://placehold.co/600x400" alt="hehehe" width="80px"/>
-        </RouterLink>
+    <div class="bg-img">
+        <div class="header flex items-center justify-between px-4">
+            <RouterLink to="/">
+                <img :src="'/logo_rikai.png'" alt="logo" width="100px">
+            </RouterLink>
+        </div>
+        <div class="sub-header text-center" style="margin-top: 60px;">
+            <p class="text-[40px] font-semibold">Đăng nhập vào Dashboard PM - Rikai</p>
+        </div>
+        <div class="login-container mx-4">
+            <form class="login-form flex flex-col justify-center items-center">
+                <p class="font-semibold text-[24px]">Đăng nhập</p>
+                <p class="font-stretch-75%">hoặc</p>
+                <p class="other-signin"><RouterLink to="/signup">đăng ký tài khoản</RouterLink></p>
+                <div class="mt-4 w-full">
+                    <div class="my-4">
+                        <FloatLabel variant="on">
+                            <InputText id="email" v-model="email" class="w-full" aria-autocomplete="off"/>
+                            <label for="email">Email</label>
+                        </FloatLabel>
+                    </div>
+                    <div class="my-4">
+                        <FloatLabel variant="on">
+                            <InputText id="password" v-model="password" class="w-full" type="password"/>
+                            <label for="password">Password</label>
+                        </FloatLabel>
+                    </div>
+                </div>
+                <Button class="button" @click="signin" :loading="isLoading" loadingIcon="pi pi-spinner pi-spin" :class="isLoading ? 'loading' : ''" label="Đăng nhập"/>
+                <div class="flex flex-col items-center mt-10">
+                    <div>
+                        <p>Hoặc</p>
+                    </div>
+                    <div class="flex gap-4 justify-center mt-4">
+                        <Button label="Google" icon="pi pi-google" variant="outlined"/>
+                        <Button label="Github" icon="pi pi-github" variant="outlined"/>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <Footer/>
     </div>
-    <div class="sub-header text-center mt-23">
-        <p class="text-[40px] font-semibold">Đăng nhập vào Dashboard PMW</p>
-    </div>
-    <div class="login-container mx-4">
-        <form class="login-form flex flex-col justify-center items-center">
-            <p class="font-semibold">Đăng nhập hoặc <span class="other-signin"><RouterLink to="/signup">đăng ký tài khoản</RouterLink></span></p>
-            <div class="mt-4">
-                <div class="my-4">
-                    <FloatLabel variant="on">
-                        <InputText id="email" v-model="email" aria-autocomplete="off"/>
-                        <label for="email">Email</label>
-                    </FloatLabel>
-                </div>
-                <div class="my-4">
-                    <FloatLabel variant="on">
-                        <InputText id="password" v-model="password" type="password"/>
-                        <label for="password">Password</label>
-                    </FloatLabel>
-                </div>
-            </div>
-            <Button class="button" @click="signin" :loading="isLoading" loadingIcon="pi pi-spinner pi-spin" :class="isLoading ? 'loading' : ''" label="Đăng nhập"/>
-            <div class="flex flex-col items-center mt-10">
-                <div>
-                    <p>Hoặc</p>
-                </div>
-                <div class="flex gap-4 justify-center mt-4">
-                    <Button label="Google" icon="pi pi-google" variant="outlined"/>
-                    <Button label="Github" icon="pi pi-github" variant="outlined"/>
-                </div>
-            </div>
-        </form>
-    </div>
-    <Footer/>
 </template>
 <script setup>
 import Footer from '@/components/layout/footer.vue'

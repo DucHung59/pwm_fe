@@ -32,7 +32,7 @@ const items = computed(() => {
   return [
     { name: 'Home', icon: 'pi pi-home', to: '/workspace/project/' + props.project_key },
     { name: 'Add', icon: 'pi pi-plus', to: '/workspace/add/' + props.project_key },
-    { name: 'Issue', icon: 'pi pi-list', to: '/workspace/issue/' + props.project_key },
+    { name: 'Tasks', icon: 'pi pi-list', to: '/workspace/task/' + props.project_key },
     { name: 'File', icon: 'pi pi-folder-open', to: '/workspace/file/' + props.project_key },
     { name: 'Wiki', icon: 'pi pi-file-word', to: '/workspace/wiki/' + props.project_key },
     { name: 'Settings', icon: 'pi pi-cog', to: '/workspace/settings/' + props.project_key },

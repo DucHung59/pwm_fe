@@ -3,12 +3,12 @@
         <div class="flex items-center gap-4">
             <div v-if="!workspace">
                 <RouterLink to="/">
-                    <img src="https://placehold.co/600x400" alt="logo" width="80px">
+                    <img :src="'/logo_rikai.png'" alt="logo" width="80px">
                 </RouterLink>
             </div>
             <div v-else>
                 <RouterLink to="/workspace/dashboard">
-                    <img src="https://placehold.co/600x400" alt="logo" width="80px">
+                    <img :src="'/logo_rikai.png'" alt="logo" width="80px">
                 </RouterLink>
             </div>
             <p class="text-[24px] font-semibold text-primary">Cài đặt cá nhân</p>

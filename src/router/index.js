@@ -87,6 +87,11 @@ const router = createRouter({
       name: 'My Profile',
       component: () => import('../views/client/user/profile.vue')
     },
+    { 
+      path: '/:pathMatch(.*)*', 
+      name: 'NotFound', 
+      component: () => import('../views/client/notfound.vue') 
+    },
     {
       path: '/create_workspace',
       name: 'Create workspace',

@@ -20,7 +20,7 @@ app.use(pinia);
 app.use(router);
 
 app.directive('tooltip', Tooltip);
-const color = "teal";
+const color = "cyan";
 
 const MyPresent = definePreset(Aura, {
     semantic: {

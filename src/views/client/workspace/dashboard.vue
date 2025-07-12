@@ -50,11 +50,19 @@
                                                 <ul class="flex gap-2">
                                                     <li>
                                                         <RouterLink :to="'/workspace/add/' + project.project_key">
-                                                            Thêm Issue
+                                                            Thêm Task
                                                         </RouterLink>
                                                     </li>
-                                                    <li>Issues</li>
-                                                    <li>Cài đặt</li>
+                                                    <li>
+                                                        <RouterLink :to="'/workspace/task/' + project.project_key">
+                                                            Tasks
+                                                        </RouterLink>
+                                                    </li>
+                                                    <li>
+                                                        <RouterLink :to="'/workspace/settings/' + project.project_key">
+                                                            Cài đặt
+                                                        </RouterLink>
+                                                    </li>
                                                 </ul>
                                             </div>
                                         </div>

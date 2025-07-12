@@ -1,42 +1,44 @@
 <template>
-    <div class="header flex items-center justify-between px-4">
-        <RouterLink to="/">
-            <img src="https://placehold.co/600x400" alt="hehehe" width="80px"/>
-        </RouterLink>
-    </div>
-    <div class="sub-header text-center mt-23">
-        <p class="text-[40px] font-semibold">Đăng ký tài khoản với PMW</p>
-    </div>
-    <div class="login-container">
-        <form class="login-form flex flex-col justify-center items-center">
-            <p class="font-semibold text-[24px]">Tạo tài khoản</p>
-            <div class="mt-4">
-                <div class="my-4">
-                    <FloatLabel variant="on">
-                        <InputText id="username" v-model="username" aria-autocomplete="off"/>
-                        <label for="username">Tên người dùng</label>
-                    </FloatLabel>
-                </div>
-                <div class="my-4">
-                    <FloatLabel variant="on">
-                        <InputText id="email" v-model="email" aria-autocomplete="off"/>
-                        <label for="email">Email</label>
-                    </FloatLabel>
-                </div>
-                <div class="my-4">
-                    <FloatLabel variant="on">
-                        <InputText id="password" v-model="password" type="password"/>
-                        <label for="password">Mật khẩu</label>
-                    </FloatLabel>
-                </div>
-            </div>
-            <Button class="button" @click="signin" loading-icon="pi pi-spin pi-spinner" :loading="isLoading">Đăng ký</Button>
-        </form>
-        <div class="text-center mt-8">
-            <p>Bạn đã có tài khoản? <span class="other-signin"><RouterLink to="login">Đăng nhập</RouterLink></span></p>
+    <div class="bg-img">
+        <div class="header flex items-center justify-between px-4">
+            <RouterLink to="/">
+                <img :src="'/logo_rikai.png'" alt="logo" width="100px">
+            </RouterLink>
         </div>
+        <div class="sub-header text-center" style="margin-top: 60px;">
+            <p class="text-[40px] font-semibold">Đăng ký tài khoản với PM - Rikai</p>
+        </div>
+        <div class="login-container">
+            <form class="login-form flex flex-col justify-center items-center">
+                <p class="font-semibold text-[24px]">Tạo tài khoản</p>
+                <div class="mt-4 my-8 w-full">
+                    <div class="my-4">
+                        <FloatLabel variant="on">
+                            <InputText id="username" v-model="username" class="w-full" aria-autocomplete="off"/>
+                            <label for="username">Tên người dùng</label>
+                        </FloatLabel>
+                    </div>
+                    <div class="my-4">
+                        <FloatLabel variant="on">
+                            <InputText id="email" v-model="email" class="w-full" aria-autocomplete="off"/>
+                            <label for="email">Email</label>
+                        </FloatLabel>
+                    </div>
+                    <div class="my-4">
+                        <FloatLabel variant="on">
+                            <InputText id="password" v-model="password" class="w-full" type="password"/>
+                            <label for="password">Mật khẩu</label>
+                        </FloatLabel>
+                    </div>
+                </div>
+                <Button class="button" @click="signin" loading-icon="pi pi-spin pi-spinner" :loading="isLoading">Đăng ký</Button>
+            </form>
+            <div class="text-center mt-8">
+                <p>Bạn đã có tài khoản? <span class="other-signin"><RouterLink to="login">Đăng nhập</RouterLink></span></p>
+            </div>
+        </div>
+        <Footer/>
     </div>
-    <Footer/>
 </template>
 <script setup>
 import { ref, watch } from 'vue';

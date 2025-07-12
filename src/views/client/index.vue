@@ -1,8 +1,10 @@
 <template>
     <Tabs value="0">
         <div class="header flex items-center justify-between px-4">
-            <div class="ml-4 flex">
-                <img src="https://placehold.co/600x400" alt="logo" width="80px">
+            <div class="ml-4 flex items-center">
+                <div>
+                    <img :src="'/logo_rikai.png'" alt="logo" width="100px">
+                </div>
                 <TabList class="ml-4">
                     <Tab value="0">Feature</Tab>
                     <Tab value="1">Demo</Tab>

@@ -83,8 +83,7 @@
                         <div class="filter-issue p-4">
                             <div class="flex items-center gap-2">
                                 <label for="">Filter:</label>
-                                <Button class="btn-filter button" size="small" variant="outlined" label="Assignee cho tôi"/>
-                                <Button class="btn-filter button" size="small" variant="outlined" label="Tạo bởi tôi"/>
+                                <SelectButton v-model="meFilter" :options="me" optionLabel="label" optionValue="value" />
                             </div>
                         </div>
                         <div class="issue-item">
@@ -127,7 +126,7 @@
 import api from '@/api/axios';
 import { toastService } from '@/assets/js/toastHelper';
 import { useUserStore } from '@/store/user';
-import { Button, Dialog, InputText, Message, useToast } from 'primevue';
+import { Button, Dialog, InputText, Message, SelectButton, useToast } from 'primevue';
 import { onMounted, ref, watch } from 'vue';
 
 const userStore = useUserStore();
@@ -146,9 +145,14 @@ const project_name_error = ref(false);
 const project_key_error = ref(false);
 
 const projects = ref([]);
+const meFilter = ref("AssignTo");
 
 //handle UI
 const isAddProjectLoading = ref(false);
+const me = [
+    { label: "Dành cho tôi", value: "AssignTo"},
+    { label: "Tạo bởi tôi", value: "CreatedBy" }
+]
 
 function toUppercase(e) {
   project_key.value = e.target.value.toUpperCase()

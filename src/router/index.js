@@ -38,6 +38,12 @@ const router = createRouter({
           props: true,
         },
         {
+          path: 'task/:project_key',
+          name: 'Task',
+          component: () => import('../views/client/project/task.vue'),
+          props: true,
+        },
+        {
           path: 'settings/:project_key',
           name: 'Project Settings',
           component: () => import('../views/client/project/settings.vue'),

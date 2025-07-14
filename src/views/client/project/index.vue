@@ -65,6 +65,12 @@
                                     <Button v-else icon="pi pi-check" rounded size="small" disabled/>
                                 </div>
                             </template>
+                            <Paginator
+                                :rows="perPage"
+                                :totalRecords="total"
+                                :first="(currentPage - 1) * perPage"
+                                @page="(event) => onPageChange(event)"
+                            />
                         </div>
                     </Dialog>
                 </template>
@@ -87,7 +93,7 @@ import api from '@/api/axios';
 import { toastService } from '@/assets/js/toastHelper';
 import Sidebar from '@/components/common/Sidebar.vue';
 import { useUserStore } from '@/store/user';
-import { Button, Tooltip, Skeleton, Dialog, InputText, IconField, InputIcon, useToast } from 'primevue';
+import { Button, Tooltip, Skeleton, Dialog, InputText, IconField, InputIcon, useToast, Paginator } from 'primevue';
 import { onMounted, ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -103,8 +109,17 @@ const project = ref({});
 const workspaceMember = ref([]);
 const isLoadingWorkspaceMember = ref(false);
 const searchMember = ref('');
-const addMemberDialog = ref(false)
+const addMemberDialog = ref(false);
+const total = ref();
+const currentPage = ref(1);
+const perPage = 10;
+
 //UI
+function onPageChange(event) {
+    const page = event.page + 1;
+    getWorkspaceMembers(page);
+}
+
 function getInitial(name) {
   return name
     ?.trim()
@@ -153,17 +168,20 @@ async function getProject() {
     }
 }
 
-async function getWorkspaceMembers() {
+async function getWorkspaceMembers(page = 1) {
     try {
         isLoadingWorkspaceMember.value = true;
         const response = await api.get('/workspace/members', {
             params: {
-                workspaceId: workspace.id
+                workspaceId: workspace.id,
+                page: page
             }
         })
 
         const data = response.data;
-        workspaceMember.value = data.members;
+        workspaceMember.value = data.members.data;
+        total.value = data.members.total;
+        currentPage.value = data.members.current_page;
         console.log(data);
         
     } catch (error) {

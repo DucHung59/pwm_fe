@@ -30,7 +30,7 @@
                         <div class="mt-4">
                             <div class="flex flex-col gap-2 mt-4">
                                 <label for="username">Username</label>
-                                <InputText id="username" v-model="username" autocomplete="off"/>
+                                <InputText id="username" v-model="username" autocomplete="off" :disabled="userStore.isSystemAdmin"/>
                             </div>
                             <div class="flex flex-col gap-2 mt-4">
                                 <label for="email">Email</label>
@@ -42,34 +42,56 @@
                                     </div>
                                 </Message>
                             </div>
-                            <div class="button-feild flex justify-between mt-4">
-                                <Button icon="pi pi-trash" label="Xóa tài khoản" variant="text"/>
-                                <Button label="Chỉnh sửa"/>
-                            </div>
+                            <template v-if="!userStore.isSystemAdmin">
+                                <div class="button-feild flex justify-between mt-4">
+                                    <Button icon="pi pi-trash" label="Xóa tài khoản" variant="text"/>
+                                    <Button label="Chỉnh sửa"/>
+                                </div>
+                            </template>
                         </div>
                     </TabPanel>
                     <TabPanel value="1">
+                        <template v-if="userStore.isSystemAdmin">
+                            Bạn đang đăng nhập với tài khoản Admin, không thể chỉnh sửa thông tin này
+                        </template>
+                        <template v-else>
+
+                        </template>
                     </TabPanel>
                     <TabPanel value="2">
-                        <div v-if="workspace == null" class="m-4">
-                            <div class="flex justify-around items-center gap-2">
-                                <p>
-                                    Bạn chưa có Workspace
-                                </p>
-                                <RouterLink to="create_workspace">
-                                    <Button label="Tạo mới" icon="pi pi-plus" variant="text"/>
+                        <template v-if="userStore.isSystemAdmin">
+                            Bố mày là admin
+                            <div class="my-4 flex justify-between items-center">
+                                <label for="">Lựa chọn Workspace</label>
+                                <RouterLink to="/create_workspace">
+                                    <Button label="Tạo workspace" icon="pi pi-plus" rounded variant="outlined"/>
                                 </RouterLink>
                             </div>
-                        </div>
-                        <div v-else>
-                            <p class="text-center text-2xl font-semibold">Thông tin workspace</p>
-                            <div class="flex justify-around items-center gap-2 mt-4">
-                                <div class="text-lg">Workspace: <span class="font-semibold">{{ workspace.workspace_name }}</span></div>
+                            <div class="my-4 flex justify-between items-center">
+                                <Select v-model="selectedWorkspace" :options="workspaces" optionLabel="workspace_name" optionValue="id" placeholder="Lựa chọn Workspace" class="w-lg" @change="onWorkspaceChange"/>
                                 <RouterLink to="/workspace/dashboard">
                                     <Button label="Đi tới Dasboard" icon="pi pi-arrow-up-right"/>
                                 </RouterLink>
                             </div>
-                        </div>
+                        </template>
+                        <template v-else>
+                            <div v-if="workspace == null" class="m-4">
+                                <div class="flex justify-around items-center gap-2">
+                                    <p>
+                                        Bạn chưa có Workspace, vui lòng liên hệ quản lý để thêm vào workspace
+                                    </p>
+                                </div>
+                            </div>
+                            <div v-else>
+                                <p class="text-center text-2xl font-semibold">Thông tin workspace</p>
+                                <div class="flex justify-around items-center gap-2 mt-4">
+                                    <div class="text-lg">Workspace: <span class="font-semibold">{{ workspace.workspace_name }}</span></div>
+                                    <RouterLink to="/workspace/dashboard">
+                                        <Button label="Đi tới Dasboard" icon="pi pi-arrow-up-right"/>
+                                    </RouterLink>
+                                </div>
+                            </div>
+                        </template>
                     </TabPanel>
                 </TabPanels>
             </div>
@@ -78,20 +100,29 @@
 </template>
 <script setup>
 import { useUserStore } from '@/store/user';
-import { Tabs, Tab, TabList, TabPanels, TabPanel, Button, InputText, Message } from 'primevue';
+import { Tabs, Tab, TabList, TabPanels, TabPanel, Button, InputText, Message, Select } from 'primevue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const userStore = useUserStore();
 
 const workspace = userStore.workspace;
+const workspaces = userStore.workspaces;
 
 const user = userStore.user;
 const username = user.username;
 const email = user.email;
 const verify = user.verify;
 
+const selectedWorkspace = ref(workspaces[0]?.id);
+
 console.log(userStore);
+
+function onWorkspaceChange() {
+    console.log(selectedWorkspace.value);
+    userStore.getWorkspaceById(selectedWorkspace.value);
+}
 
 async function signout() {
     try {

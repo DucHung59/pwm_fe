@@ -127,7 +127,7 @@
 .action-item {
     padding: 4px;
     p {
-        color: #808080;
+        color: #808080 !important;
     }
     a {
         display: block;

@@ -1,7 +1,7 @@
 <template>
     <div class="header flex items-center justify-between p-4">
         <RouterLink to="/">
-            <img src="https://placehold.co/600x400" alt="logo" width="80px">
+            <img :src="'/logo_rikai.png'" alt="logo" width="80px">
         </RouterLink>
     </div>
     <div style="margin-top: 60px;" class="container py-8">

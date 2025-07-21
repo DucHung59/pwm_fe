@@ -1,6 +1,6 @@
 <template>
     <div class="px-10 pt-8">
-        <div class="flex justify-center items-center gap-4 pt-4 pb-10" v-if="userStore.role === 'admin'">
+        <div class="flex justify-center items-center gap-4 pt-4 pb-10" v-if="userStore.role === 'manager' || userStore.isSystemAdmin">
             <img :src="'/app_icon.png'" alt="hehee" width="60px"/>
             <p class="text-[24px] font-semibold">{{ workspace.workspace_name }}</p>
             <RouterLink to="settings">
@@ -16,7 +16,7 @@
                             <p>Dự án</p>
                         </div>
                         <div>
-                            <Button class="btn-add" size="small" icon="pi pi-plus" rounded variant="outlined" v-tooltip.top="'Thêm Project'" v-if="userStore.role === 'admin'" v-show="isPrjOpen" @click="addProjectDialog = true"/>
+                            <Button class="btn-add" size="small" icon="pi pi-plus" rounded variant="outlined" v-tooltip.top="'Thêm Project'" v-if="userStore.role === 'manager' || userStore.isSystemAdmin" v-show="isPrjOpen" @click="addProjectDialog = true"/>
                             <Dialog v-model:visible="addProjectDialog" :style="{width: '50vw'}" @hide="onDialogHide" header="Thêm Dự án mới" :draggable="false" maximizable="true" :modal="true">
                                 <div class="flex flex-col gap-2 pt-4">
                                     <label for="project-name" class="pl-4">Tên dự án</label>
@@ -83,7 +83,7 @@
                         <div class="filter-issue p-4">
                             <div class="flex items-center gap-2">
                                 <label for="">Filter:</label>
-                                <SelectButton v-model="meFilter" :options="me" optionLabel="label" optionValue="value" />
+                                <SelectButton v-model="meFilter" :options="me" optionLabel="label" optionValue="value" @change="onTaskFilterChange"/>
                             </div>
                         </div>
                         <div class="issue-item">
@@ -97,6 +97,44 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <template v-if="isTasksLoading">
+                                        <tr class="">
+                                            <td class="py-3 px-2" colspan="4">
+                                                <Skeleton class="mb-2"></Skeleton>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template v-else>
+                                        <template v-if="tasks.length <= 0">
+                                            <tr class="cursor-default hover:bg-cyan-100">
+                                                <td colspan="4" class="text-center py-3">Không có task được hiển thị</td>
+                                            </tr>
+                                        </template>
+                                        <template v-else>
+                                            <template v-for="task in tasks">
+                                                <tr class="cursor-default hover:bg-cyan-100">
+                                                        
+                                                            <td class="text-center py-3">
+                                                                <RouterLink :to="'/workspace/view/' + task.task_key">
+                                                                    {{ task.task_key }}
+                                                                </RouterLink>
+                                                            </td>
+                                                            <td class="text-center py-3">
+                                                                <RouterLink :to="'/workspace/view/' + task.task_key">
+                                                                    {{ task.subject }}
+                                                                </RouterLink>
+                                                            </td>
+                                                            <td class="text-center py-3">
+                                                                <span class="px-4 py-1 text-white font-medium rounded-full" 
+                                                                    :style="{ backgroundColor: task.status_info.status_color }">
+                                                                    {{task.status_info.status_type}}
+                                                                </span>
+                                                            </td>
+                                                            <td class="text-center py-3">{{ task.due_date ? task.due_date : 'Không có' }}</td>
+                                                    </tr>
+                                            </template>
+                                        </template>
+                                    </template>
                                 </tbody>
                             </table>
                         </div>
@@ -126,7 +164,7 @@
 import api from '@/api/axios';
 import { toastService } from '@/assets/js/toastHelper';
 import { useUserStore } from '@/store/user';
-import { Button, Dialog, InputText, Message, SelectButton, useToast } from 'primevue';
+import { Button, Dialog, InputText, Message, SelectButton, useToast, Skeleton } from 'primevue';
 import { onMounted, ref, watch } from 'vue';
 
 const userStore = useUserStore();
@@ -147,8 +185,17 @@ const project_key_error = ref(false);
 const projects = ref([]);
 const meFilter = ref("AssignTo");
 
+//data task
+const tasks = ref({});
+
+//Paginate
+const perPage = 10;
+const total = ref(0);
+const currentPage = ref(1);
+
 //handle UI
 const isAddProjectLoading = ref(false);
+const isTasksLoading = ref(false)
 const me = [
     { label: "Dành cho tôi", value: "AssignTo"},
     { label: "Tạo bởi tôi", value: "CreatedBy" }
@@ -186,6 +233,14 @@ function toggleOpen(cate) {
     else if (cate === 'recent') isRecentOpen.value = !isRecentOpen.value;
 }
 
+function onTaskFilterChange() {
+    if(meFilter.value == 'AssignTo') {
+        getTasksByAssginee();
+    } else if (meFilter.value == 'CreatedBy') {
+        getTasksByCreator();
+    }
+}
+
 //add project
 async function addProject() {
     if(!checkValidated()) return;
@@ -221,8 +276,49 @@ async function getProject() {
     }
 }
 
+async function getTasksByAssginee() {
+    try {
+        isTasksLoading.value = true;
+        const response = await api.get('task/getByAssignee')
+
+        const result = response.data;
+        if(result.success) {
+            tasks.value = result.task.data;
+            total.value - result.total;
+            currentPage.value = result.current_page;
+            console.log(tasks.value);
+        }
+        
+    } catch (error) {
+        console.log(error.message);
+    } finally {
+        isTasksLoading.value = false;
+    }
+}
+
+
+async function getTasksByCreator() {
+    try {
+        isTasksLoading.value = true;
+        const response = await api.get('task/getByCreator')
+
+        const result = response.data;
+        if(result.success) {
+            tasks.value = result.task.data;
+            total.value - result.total;
+            currentPage.value = result.current_page;
+            console.log(tasks.value);
+        }
+    } catch (error) {
+        console.log(error.message);
+    } finally {
+        isTasksLoading.value = false;
+    }
+}
+
 onMounted(() => {
     getProject();
+    getTasksByAssginee();
 })
 
 watch(project_key, (newVal) => {

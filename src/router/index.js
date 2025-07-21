@@ -44,6 +44,12 @@ const router = createRouter({
           props: true,
         },
         {
+          path: 'view/:task_key',
+          name: 'View task',
+          component: () => import('../views/client/task/index.vue'),
+          props: true,
+        },
+        {
           path: 'settings/:project_key',
           name: 'Project Settings',
           component: () => import('../views/client/project/settings.vue'),
@@ -54,23 +60,6 @@ const router = createRouter({
           name: 'Workspace Setting',
           component: () => import('../views/client/workspace/settings.vue')
         }
-      ],
-    },
-    {
-      path: '/admin',
-      name: 'admin',
-      component: AdminLayout,
-      children: [
-        {
-          path: '',
-          name: 'Admin Dashboard',
-          component: () => import('../views/admin/index.vue'),
-        },
-        {
-          path: 'test',
-          name: 'Test',
-          component: () => import('../views/admin/testAPI.vue'),
-        },
       ],
     },
     {

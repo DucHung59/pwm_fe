@@ -20,9 +20,6 @@
                             <li :class="{ active: activeSetting === 'info' }"
                                 @click="setActive('info')"
                             >Thông tin</li>
-                            <li :class="{ active: activeSetting === 'email' }"
-                                @click="setActive('email')"
-                            >Thông báo email</li>
                         </ul>
                     </div>
                 </li>
@@ -74,31 +71,25 @@
                     <p class="text-2xl font-semibold">Danh sách thành viên <span class="text-sm text-gray-500">({{ members.length }} Người)</span></p>
                     <div class="flex items-center gap-4 my-4">
                         <Button label="Thêm thành viên" icon="pi pi-plus" variant="outlined" rounded size="small" @click="openAddMemberDialog = true"/>
-                        <Button label="Quản lý thành viên" icon="pi pi-users" variant="outlined" rounded size="small"/>
                     </div>
-                    <Dialog v-model:visible="openAddMemberDialog" header="Thêm thành viên" maximizable modal draggable="false" resizable="false" :style="{ width: '50vw' }">
+                    <Dialog v-model:visible="openAddMemberDialog" header="Thêm thành viên" maximizable modal :draggable="false" resizable="false" :style="{ width: '50vw' }">
                         <div>
                             <p class="text-1xl font-semibold">Thêm thành viên</p>
                             <div class="flex flex-col items-center gap-2">
                                 <div class="flex flex-wrap gap-4">
                                     <label class="font-semibold">Vai trò:</label>
                                     <div class="flex items-center gap-2">
-                                        <RadioButton v-model="role" inputId="admin" name="role" value="admin" />
-                                        <label for="admin">Admin</label>
+                                        <RadioButton v-model="role" inputId="manager" name="role" value="manager" />
+                                        <label for="manager">Quản lý</label>
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <RadioButton v-model="role" inputId="member" name="role" value="member" />
-                                        <label for="member">Member</label>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <RadioButton v-model="role" inputId="guest" name="role" value="guest" />
-                                        <label for="guest">Guest</label>
+                                        <label for="member">Thành viên</label>
                                     </div>
                                 </div>
                                 <div class="flex flex-col gap-2">
-                                    <p v-if="role == 'admin'" class="text-sm text-gray-600">Quản lý cài đặt Workspace: người dùng, thành viên, dự án</p>
+                                    <p v-if="role == 'manager'" class="text-sm text-gray-600">Quản lý cài đặt Workspace: người dùng, thành viên, dự án</p>
                                     <p v-if="role == 'member'" class="text-sm text-gray-600">Tham gia vào Workspace chỉnh sửa, triển khai tiến độ dự án</p>
-                                    <p v-if="role == 'guest'" class="text-sm text-gray-600">Xem các dự án, tiến độ dự án</p>
                                 </div>
                                 <div class="my-4">
                                     <InputText v-model="newMemberEmail" placeholder="Nhập email" class="w-2xl" :invalid="emailValid"/>
@@ -106,6 +97,37 @@
                                 </div>
                             </div>
                                 <Button label="Thêm" icon="pi pi-plus" :loading="isInviteMemberLoading" loadingIcon="pi pi-spin pi-spinner" variant="outlined" rounded size="small" @click="inviteMember"/>
+                        </div>
+                    </Dialog>
+                    <Dialog v-model:visible="openEditRoleDialog" header="Sửa quyền thành viên" maximizable modal :draggable="false" resizable="false" :style="{ width: '50vw' }">
+                        <div>
+                            <p class="mb-2"><strong>{{ selectedMember?.user?.username }}</strong> ({{ selectedMember?.user?.email }})</p>
+                            <div class="flex flex-col items-center gap-2">
+                                <div class="flex flex-wrap gap-4">
+                                    <label class="font-semibold">Vai trò:</label>
+                                    <div class="flex items-center gap-2">
+                                        <RadioButton v-model="editedRole" inputId="manager" name="role" value="manager" />
+                                        <label for="manager">Quản lý</label>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <RadioButton v-model="editedRole" inputId="member" name="role" value="member" />
+                                        <label for="member">Thành viên</label>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <p v-if="editedRole == 'manager'" class="text-sm text-gray-600">Quản lý cài đặt Workspace: người dùng, thành viên, dự án</p>
+                                    <p v-if="editedRole == 'member'" class="text-sm text-gray-600">Tham gia vào Workspace chỉnh sửa, triển khai tiến độ dự án</p>
+                                </div>
+                            </div>
+                            <Button
+                                label="Lưu"
+                                icon="pi pi-check"
+                                :loading="isUpdatingRole"
+                                @click="updateMemberRole"
+                                rounded
+                                size="small"
+                                class="mt-2"
+                            />
                         </div>
                     </Dialog>
                     <div>
@@ -125,7 +147,18 @@
                                         <td class="px-3 py-2">{{ index + 1 }}</td>
                                         <td class="px-3 py-2">{{ member.user.username }}</td>
                                         <td class="px-3 py-2">{{ member.user.email }}</td>
-                                        <td class="px-3 py-2">{{ member.role }}</td>
+                                        <td class="px-3 py-2">
+                                            {{ member.role }}
+                                            <Button
+                                                v-if="userStore.isSystemAdmin"
+                                                icon="pi pi-pencil"
+                                                rounded
+                                                text
+                                                size="small"
+                                                @click="editMemberRole(member)"
+                                                class="text-blue-500"
+                                                />
+                                        </td>
                                         <td class="px-3 py-2">{{ dayjs(member.created_at).format('DD/MM/YYYY HH:mm') }}</td>
                                     </tr>
                                 </template>
@@ -141,8 +174,7 @@
                 </div>
                 <div class="invite-member" v-if="activeSetting == 'invite-member'">
                     <div class="flex items-center gap-4 my-4">
-                        <p class="text-2xl font-semibold">Danh sách thành viên được mời</p>
-                        <Button></Button>
+                        <p class="text-2xl font-semibold">Danh sách thành viên được mời <span class="text-sm text-gray-500">({{ inviteMembers.length }} Người)</span></p>
                     </div>
                     <div>
                         <table class="w-full text-sm tr-border">
@@ -209,15 +241,23 @@
                                             <span class="text-sm">({{ project.project_key }})</span>
                                         </td>
                                         <td class="px-3 py-2 flex gap-2 justify-center">
-                                            <RouterLink :to="'project/' + project.project_key">
-                                                <Button label="Tới" icon="pi pi-arrow-up-right" iconPos="right" size="small"/>
-                                            </RouterLink>
+                                            <template v-if="userStore.isSystemAdmin">
+                                                <RouterLink :to="'project/' + project.project_key">
+                                                    <Button label="Tới" icon="pi pi-arrow-up-right" iconPos="right" size="small"/>
+                                                </RouterLink>
+                                            </template>
                                             <Button label="Xóa" icon="pi pi-trash" size="small" iconPos="right" severity="danger"/>
                                         </td>
                                     </tr>
                                 </template>
                             </tbody>
                         </table>
+                        <Paginator
+                            :rows="perPage"
+                            :totalRecords="total"
+                            :first="(currentPage - 1) * perPage"
+                            @page="(event) => onPageChange(event, 'invite-member')"
+                        />
                     </div>
                 </div>
             </div>
@@ -262,6 +302,17 @@ const projects = ref([]);
 const inviteMembers = ref([]);
 
 //Function Handle UI
+const selectedMember = ref(null);
+const openEditRoleDialog = ref(false);
+const editedRole = ref('');
+
+function editMemberRole(member) {
+  selectedMember.value = member;
+  editedRole.value = member.role;
+  openEditRoleDialog.value = true;
+}
+
+
 function setActive(setting) {
     if (activeSetting.value === setting) return
     activeSetting.value = setting
@@ -393,8 +444,12 @@ async function inviteMember() {
 async function getProjects() {
     try {
         isLoading.value = true;
-        const response = await api.get('/project/get')
-        projects.value = response.data.projects;
+        const response = await api.get('/project/getAllProjects')
+
+        const result = response.data;
+        projects.value = result.projects.data;
+        total.value = result.projects.total;
+        currentPage.value = result.projects.current_page;
         console.log(projects.value);
     } catch (error) {
         console.log(error.message);

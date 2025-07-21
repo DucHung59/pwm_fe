@@ -83,7 +83,7 @@
                                     Thông tin cá nhân
                                 </RouterLink>
                             </li>
-                            <li class="action-item specials" v-if="userStore.role == 'admin'">
+                            <li class="action-item specials" v-if="userStore.role == 'manager' || userStore.isSystemAdmin">
                                 <RouterLink to="/workspace/settings">
                                     Không gian làm việc
                                 </RouterLink>

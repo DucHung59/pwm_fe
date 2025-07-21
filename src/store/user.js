@@ -5,6 +5,7 @@ export const useUserStore = defineStore('user', {
   state: () => ({
     user: null,
     workspace: null,
+    workspaces: [],
     role: null
   }),
   persist: {
@@ -12,6 +13,7 @@ export const useUserStore = defineStore('user', {
   },
   getters: {
     isLoggedIn: (state) => !!state.user,
+    isSystemAdmin: (state) => state.user?.username === "admin"
   },
   actions: {
     async fetchUser() {
@@ -21,12 +23,36 @@ export const useUserStore = defineStore('user', {
         this.user = res.data;
 
         if (res.data) {
-          const resWorkspace = await api.get('/workspace');
-          this.workspace = resWorkspace.data.workspace;
-          this.role = resWorkspace.data.role;
+          if(this.user.username === 'admin') {
+            const resWorkspaces = await api.get('/getAllWorkspace');
+            this.workspaces = resWorkspaces.data.workspaces.data;
+            this.workspace = this.workspaces[0] || null;
+          } else {
+            const resWorkspace = await api.get('/workspace');
+            this.workspace = resWorkspace.data.workspace;
+            this.role = resWorkspace.data.role;
+          }
         }
       } catch {
         this.user = null;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async getWorkspaceById(id) {
+      try {
+        this.isLoading = true;
+        const resWorkspace = await api.get('/getWorkspaceById', {
+          params: {
+            workspace_id: id,
+          }
+        });
+        this.workspace = resWorkspace.data.workspace;
+        this.role = resWorkspace.data.role;
+        console.log(this.workspace);
+        
+      } catch (error) {
+        console.log(error.message);
       } finally {
         this.isLoading = false;
       }
@@ -46,6 +72,6 @@ export const useUserStore = defineStore('user', {
       } catch (error) {
         console.error('Logout failed:', error);
       }
-    }
+    },
   },
 });

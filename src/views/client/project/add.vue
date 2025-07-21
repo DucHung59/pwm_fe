@@ -31,15 +31,19 @@
                         <Editor v-model="description" editorStyle="height: 320px" />
                     </div>
                     <div class="grid grid-cols-2 gap-8">
-                        <div class="flex items-center justify-around gap-2 border-b border-gray-400 p-4">
+                        <div class="grid grid-cols-[12rem_1fr] items-center justify-around gap-2 border-b border-gray-400 p-4">
                             <p>Trạng thái</p>
                             <Select v-model="selectedStatus" :options="statuses" optionLabel="status_type" optionValue="id" placeholder="Chọn trạng thái" class="w-full md:w-56" />
                         </div>
-                        <div class="flex items-center justify-around gap-2 border-b border-gray-400 p-4">
+                        <div class="grid grid-cols-[12rem_1fr] items-center justify-around gap-2 border-b border-gray-400 p-4">
                             <p>Người được giao</p>
                             <Select v-model="assignee" :options="members" optionLabel="user.username" optionValue="user.id" placeholder="Chọn " class="w-full md:w-56" />
                         </div>
-                        <div class="flex items-center justify-around gap-2 border-b border-gray-400 p-4">
+                        <div class="grid grid-cols-[12rem_1fr] items-center justify-around gap-2 border-b border-gray-400 p-4">
+                            <p>Mức độ ưu tiên</p>
+                            <Select v-model="priority" :options="priorities" optionLabel="label" optionValue="value" placeholder="Chọn " class="w-full md:w-56" />
+                        </div>
+                        <div class="grid grid-cols-[12rem_1fr] items-center justify-around gap-2 border-b border-gray-400 p-4">
                             <p>Hạn chót</p>
                             <DatePicker v-model="due_date" placeholder="Chọn hạn chót" showIcon  dateFormat="dd/mm/yy" class="w-full md:w-56" />
                         </div>
@@ -56,6 +60,7 @@
 import api from '@/api/axios';
 import { toastService } from '@/assets/js/toastHelper';
 import Sidebar from '@/components/common/Sidebar.vue';
+import router from '@/router';
 import { Button, Select, InputText, DatePicker, useToast } from 'primevue';
 import Editor from 'primevue/editor';
 import { ref, computed, onMounted, watch } from 'vue';
@@ -68,6 +73,11 @@ const project = ref({});
 const issues = ref([]);
 const statuses = ref([]);
 const members = ref([]);
+const priorities = [
+    {label: 'Thấp', value: 'low'},
+    {label: 'Bình thường', value: 'normal'},
+    {label: 'Cao', value: 'high'},
+]
 
 const subject = ref('')
 const selectedIssue = ref(null);
@@ -75,6 +85,7 @@ const description = ref('');
 const selectedStatus = ref(null);
 const assignee = ref(null);
 const due_date = ref(null);
+const priority = ref('normal')
 
 const isCreating = ref(false);
 
@@ -123,7 +134,7 @@ async function addTask() {
         });
         return;
     }
-    
+
     try {
         isCreating.value = true;
         const response = await api.post('task/create', {
@@ -131,6 +142,7 @@ async function addTask() {
             subject: subject.value,
             project_key: project_key.value,
             category: selectedIssue.value,
+            priority: priority.value,
             status: selectedStatus.value,
             assignee: assignee.value,
             description: description.value,
@@ -140,6 +152,7 @@ async function addTask() {
         const result = response.data;
         if(result.success == true) {
             console.log(result);
+            router.push(`/workspace/task/${project_key.value}`)
             toast.success('Thêm mới thành công', 'Thông báo')
         } else {
             console.log(result.message);

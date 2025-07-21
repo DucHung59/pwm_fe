@@ -34,7 +34,7 @@
                         />
                     </div>
                 </div>
-                <template v-if="userStore.role == 'admin'">
+                <template v-if="userStore.role == 'manager' || userStore.isSystemAdmin">
                     <Button label="Thêm thành viên" variant="outlined" size="small" class="button" @click="openAddMemberDialog"/>
                     <Dialog v-model:visible="addMemberDialog" modal header="Thêm thành viên" :draggable="false" :style="{ width: '25rem' }">
                         <div v-if="isLoadingWorkspaceMember">
@@ -193,7 +193,7 @@ async function getWorkspaceMembers(page = 1) {
 
 async function addProjectMember(userId, userRole) {
     try {
-        const role = userRole == 'admin' ? 'PM' : userRole;
+        const role = userRole == 'manager' ? 'PM' : userRole;
         console.log(role);
         const response = await api.post('/project/addMember', {
             project_key: project_key.value,

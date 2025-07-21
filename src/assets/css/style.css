@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 
 
+a:hover {
+    color: var(--p-primary-500);
+}
+
 .breadcrumb-item {
     color: var(--color-slate-500);
 }

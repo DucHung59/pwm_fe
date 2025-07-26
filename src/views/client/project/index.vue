@@ -78,9 +78,52 @@
         </div>
         <div class="project-content m-8 flex gap-8">
             <div class="project-main w-full border-2 border-gray-200 rounded-md p-4">
-                <p>Bảng công việc chính</p>
+                <p class="mb-4 text-lg font-medium">Nhật ký gần đây</p>
+                <template v-for="log in logs">
+                    <div class="border-b border-gray-300 px-2 py-4 bg-cyan-50 hover:bg-cyan-100 cursor-default">
+                        <div class="flex gap-2 justify-between items-center">
+                            <div class="flex gap-2">
+                                <div>
+                                    <span v-if="log.type == 'add' "class="px-4 py-1 text-white text-sm font-medium rounded-full bg-emerald-500">
+                                        Thêm mới
+                                    </span>
+                                    <span v-if="log.type == 'update' "class="px-4 py-1 text-white text-sm font-medium rounded-full bg-amber-500">
+                                        Cập nhật
+                                    </span>
+                                    <span v-if="log.type == 'delete' "class="px-4 py-1 text-white text-sm font-medium rounded-full bg-rose-500">
+                                        Xóa bỏ
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="text-lg">{{ log.user.username }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span>{{ dayjs(log.created_at).format('DD/MM/YYYY') }}</span>
+                            </div>
+                        </div>
+                        <div class="px-4 py-2">
+                            <div class="overflow-hidden text-ellipsis whitespace-nowrap w-full max-w-2xl">
+                                <span v-html="log.description"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <template v-if="!isLogLoading">
+                    <div class="text-center mt-4" v-if="logsTotal >= logsPerPage">
+                        <Button icon="pi pi-angle-down" rounded variant="outlined" @click="viewMoreLogs"/>
+                    </div>
+                    <div v-else class="text-center p-4">
+                        <span class="text-gray-400 font-medium">Đã đến cuối trang</span>
+                    </div>
+                </template>
+                <template v-else>
+                    <div class="text-center mt-4">
+                        <i class="pi pi-spin pi-spinner" style="font-size: 1.4rem"></i>
+                    </div>
+                </template>
             </div>
-            <div class="project-sidebar w-1/2 border-2 border-gray-200 rounded-md p-4">
+            <div class="project-sidebar w-1/2 border-2 border-gray-200 rounded-md p-4 h-fit">
                 <div class="project-sidebar-item">
                     <p>Bảng trạng thái</p>
                 </div>
@@ -93,6 +136,7 @@ import api from '@/api/axios';
 import { toastService } from '@/assets/js/toastHelper';
 import Sidebar from '@/components/common/Sidebar.vue';
 import { useUserStore } from '@/store/user';
+import dayjs from 'dayjs';
 import { Button, Tooltip, Skeleton, Dialog, InputText, IconField, InputIcon, useToast, Paginator } from 'primevue';
 import { onMounted, ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -108,16 +152,27 @@ const workspace = userStore.workspace;
 const project = ref({});
 const workspaceMember = ref([]);
 const isLoadingWorkspaceMember = ref(false);
+const isLogLoading = ref(false);
+
 const searchMember = ref('');
 const addMemberDialog = ref(false);
 const total = ref();
 const currentPage = ref(1);
 const perPage = 10;
 
+const logs = ref({});
+const logsTotal = ref();
+const logsPerPage = ref(15);
+
 //UI
 function onPageChange(event) {
     const page = event.page + 1;
     getWorkspaceMembers(page);
+}
+
+function viewMoreLogs() {
+    const perPage = logsPerPage.value + 10;
+    getProjectLogs(perPage);
 }
 
 function getInitial(name) {
@@ -182,8 +237,6 @@ async function getWorkspaceMembers(page = 1) {
         workspaceMember.value = data.members.data;
         total.value = data.members.total;
         currentPage.value = data.members.current_page;
-        console.log(data);
-        
     } catch (error) {
         console.log(error.message);
     } finally {
@@ -191,10 +244,31 @@ async function getWorkspaceMembers(page = 1) {
     }
 }
 
+async function getProjectLogs(perPage = 15) {
+    try {
+        isLogLoading.value = true;
+        const response = await api.get('log/getByProject', {
+                params: {
+                    project_id: project.value.id,
+                    perPage: perPage,
+                }
+            }
+        )
+
+        const result = response.data;
+        logs.value = result.logs.data;
+        logsTotal.value = result.logs.total;
+        logsPerPage.value = result.logs.per_page;
+    } catch (error) {
+        console.log(error.message);
+    } finally {
+        isLogLoading.value = false;
+    }
+}
+
 async function addProjectMember(userId, userRole) {
     try {
         const role = userRole == 'manager' ? 'PM' : userRole;
-        console.log(role);
         const response = await api.post('/project/addMember', {
             project_key: project_key.value,
             user_id : userId,
@@ -202,11 +276,11 @@ async function addProjectMember(userId, userRole) {
         })
 
         const data = response.data;
-        console.log(data);
         if (data.success) {
             toast.success('Thêm thành viên thành công', 'Thành công');
             getWorkspaceMembers();
             getProject();
+            getProjectLogs();
         } else {
             toast.error('Thêm thành viên không thành công', 'Lỗi');
         }
@@ -215,8 +289,9 @@ async function addProjectMember(userId, userRole) {
     }
 }
 
-onMounted(() => {
-    getProject();
+onMounted(async () => {
+    await getProject();
+    getProjectLogs();
 })
 
 watch(project_key, () => {

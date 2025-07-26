@@ -6,7 +6,7 @@
                 <ul class="flex gap-2">
                     <li>
                         <Button class="button" variant="text">
-                            <RouterLink to="/workspace/dashboard">Trang chủ</RouterLink>
+                            <RouterLink to="/workspace/dashboard" class="font-medium">Trang chủ</RouterLink>
                         </Button>
                     </li>
                     <li>
@@ -181,7 +181,6 @@ async function getProject() {
         });
     
         projects.value = response.data.projects ? response.data.projects : [];
-        console.log(projects.value);
     } catch (error) {
         console.log(error);
     } finally {

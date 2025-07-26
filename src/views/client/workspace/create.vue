@@ -12,7 +12,7 @@
         </div>
         <div class="flex justify-between items-center mt-4">
             <Button label="Làm mới bản ghi" icon="pi pi-eraser" variant="text" @click="workspaceName = ''"/>
-            <Button label="Tạo mới" icon="pi pi-plus" @click="createWorkspace"/>
+            <Button label="Tạo mới" icon="pi pi-plus" :loading="isCreatingWorkspace" loadingIcon="pi pi-spinner pi-spin" @click="createWorkspace"/>
         </div>
     </div>
 </template>
@@ -29,15 +29,17 @@ const router = useRouter();
 const toast = new toastService(useToast());
 
 const workspaceName = ref('');
+const isCreatingWorkspace = ref(false);
+
 
 async function createWorkspace() {
     try {
+        isCreatingWorkspace.value = true;
         const response = await api.post('/workspace/create', {
             workspaceName: workspaceName.value,
         })
 
         const data = response.data;
-        console.log(data);
         
         userStore.workspace = data.workspace;
         userStore.role = data.workspace_member.role; 
@@ -47,6 +49,8 @@ async function createWorkspace() {
     } catch (error) {
         toast.error("Tạo mới thất bại", "Lỗi")
         console.log(error.message);
+    } finally {
+        isCreatingWorkspace.value = false;
     }
 }
 </script>

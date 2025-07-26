@@ -83,15 +83,10 @@ async function signin() {
                 const inviteData = res.data;
                 userStore.workspace = inviteData.workspace;
                 userStore.role = inviteData.role;
-
-                console.log(inviteData);
             } catch (error) {
                 console.error('Không thể accept lời mời:', error);
             }
         }
-
-        console.log('Đăng ký thành công', data.user);
-
 
         if(userStore.workspace) {
             router.push('/workspace/dashboard');

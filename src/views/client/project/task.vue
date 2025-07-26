@@ -13,9 +13,15 @@
         <div class="mt-4">
             <div class="my-4 p-4">
                 <label class="font-medium text-2xl">Tìm kiếm</label>
-                <div class="flex items-center gap-2 m-4">
-                    <label class="font-medium" for="selectStatus">Trạng thái:</label>
-                    <SelectButton id="selectStatus" v-model="statusFilter" :options="statuses" optionLabel="status_type" optionValue="id" @change="onStatusChange" />
+                <div class="flex items-center justify-between m-4">
+                    <div class="flex items-center gap-2">
+                        <label class="font-medium" for="selectStatus">Trạng thái:</label>
+                        <SelectButton id="selectStatus" v-model="statusFilter" :options="statuses" optionLabel="status_type" optionValue="id" @change="onStatusChange" />
+                    </div>
+                    <div v-if="userStore.isSystemAdmin || userStore.role == 'manager'" class="flex items-center gap-2">
+                        <label class="font-medium" for="isDelEnabel">Đã xóa:</label>
+                        <ToggleButton id="isDelEnabel" v-model="isDelEnable" onLabel="On" offLabel="Off" @change="isDelChange"/>
+                    </div>
                 </div>
                 <div class="m-4 flex items-center justify-between">
                     <div class="m-4 flex items-center gap-2">
@@ -53,7 +59,7 @@
                                 <th class="px-3 py-2 border">Người tạo</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody :class="isTaskLoading ? 'opacity-50 pointer-events-none select-none' : ''">
                             <template v-if="tasks.length == 0">
                                 <tr class="text-center">
                                     <td colspan="8" class="text-center py-3 cursor-default font-medium text-gray-500">Không có bản ghi</td>
@@ -112,29 +118,37 @@ import api from '@/api/axios';
 import Sidebar from '@/components/common/Sidebar.vue';
 import { onMounted, ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { Paginator, SelectButton, Select, Button, InputText  } from 'primevue';
+import { Paginator, SelectButton, Select, Button, InputText, ToggleButton  } from 'primevue';
 import dayjs from 'dayjs';
 import FlameIcon from '@/components/icons/FlameIcon.vue';
+import { useUserStore } from '@/store/user';
 
 
 const route = useRoute();
 const project_key = computed(() => route.params.project_key);
+const userStore = useUserStore();
 
 const project = ref({});
 const statuses = ref({});
 const issues = ref({});
 
+const isDelEnable = ref(false);
 const statusFilter = ref();
 const categoryFilter = ref();
 const assigneeFilter = ref();
 const keyword = ref();
 
 const isTaskLoading = ref(false);
-const perPage = 25;
+const perPage = 10;
 const total = ref(0);
 const currentPage = ref(1);
 
 const tasks = ref({});
+
+function onPageChange(event) {
+    const page = event.page + 1;
+    getAllTasks(page)
+}
 
 function formatDate(dateStr) {
     const date = new Date(dateStr);
@@ -155,10 +169,15 @@ function clearFilter() {
     categoryFilter.value = null;
     assigneeFilter.value = null;
     keyword.value = null;
+    isDelEnable.value = false;
     getAllTasks();
 }
 
 function tasksFilter() {
+    getAllTasks();
+}
+
+function isDelChange() {
     getAllTasks();
 }
 
@@ -178,7 +197,7 @@ async function getProject() {
     }
 }
 
-async function getAllTasks() {
+async function getAllTasks(page = 1) {
     try {
         isTaskLoading.value = true;
         const response = await api.get('task/get', {
@@ -188,6 +207,8 @@ async function getAllTasks() {
                 category : categoryFilter.value,
                 assignee : assigneeFilter.value,
                 search : keyword.value,
+                isDelEnable: isDelEnable.value,
+                page: page,
             }
         })
 
@@ -195,7 +216,6 @@ async function getAllTasks() {
         currentPage.value = result.task.current_page;
         total.value = result.task.total
         tasks.value = result.task.data;
-        console.log(tasks.value);
     } catch (error) {
         console.log(error.message);
     } finally {
@@ -206,7 +226,6 @@ async function getAllTasks() {
 
 onMounted(async () => {
     await getProject();
-    console.log(project.value.id);
     getAllTasks();
 })
 

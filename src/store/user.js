@@ -35,6 +35,9 @@ export const useUserStore = defineStore('user', {
         }
       } catch {
         this.user = null;
+        this.workspaces = null;
+        this.workspace = null;
+        this.role = null;
       } finally {
         this.isLoading = false;
       }
@@ -49,7 +52,6 @@ export const useUserStore = defineStore('user', {
         });
         this.workspace = resWorkspace.data.workspace;
         this.role = resWorkspace.data.role;
-        console.log(this.workspace);
         
       } catch (error) {
         console.log(error.message);

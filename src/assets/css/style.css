@@ -5,6 +5,14 @@ a:hover {
     color: var(--p-primary-500);
 }
 
+img[src^="data:image"] {
+    min-width: 40px;
+    max-width: 400px;
+    max-width: 100%;
+    height: auto;
+}
+
+
 .breadcrumb-item {
     color: var(--color-slate-500);
 }

@@ -60,13 +60,13 @@
 import api from '@/api/axios';
 import { toastService } from '@/assets/js/toastHelper';
 import Sidebar from '@/components/common/Sidebar.vue';
-import router from '@/router';
 import { Button, Select, InputText, DatePicker, useToast } from 'primevue';
 import Editor from 'primevue/editor';
 import { ref, computed, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
+const router = useRouter();
 const project_key = computed(() => route.params.project_key);
 
 const project = ref({});
@@ -151,7 +151,6 @@ async function addTask() {
 
         const result = response.data;
         if(result.success == true) {
-            console.log(result);
             router.push(`/workspace/task/${project_key.value}`)
             toast.success('Thêm mới thành công', 'Thông báo')
         } else {

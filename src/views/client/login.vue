@@ -87,7 +87,6 @@ async function signin() {
         })
 
         const data = response.data;
-        console.log(data);
         
         localStorage.setItem('token', data.token);
         userStore.user = data.user;
@@ -101,7 +100,6 @@ async function signin() {
                     token: inviteToken
                 });
                 const inviteData = res.data;
-                console.log(inviteData);
                 userStore.workspace = inviteData.workspace;
                 userStore.role = inviteData.role;
 

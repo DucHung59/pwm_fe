@@ -45,18 +45,13 @@
             <h4>Chào mừng bạn tới workspace: {{ inviteData?.workspace.workspace_name }}</h4>
         </div>
     </div>
-    <div v-else>
-        <Skeleton class="mb-2"></Skeleton>
-        <Skeleton width="10rem" class="mb-2"></Skeleton>
-        <Skeleton width="5rem" class="mb-2"></Skeleton>
-    </div>
 </template>
 <script setup>
 import api from '@/api/axios';
 import { useUserStore } from '@/store/user';
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { Skeleton } from 'primevue';
+import { Button } from 'primevue';
 
 
 const route = useRoute();
@@ -72,7 +67,6 @@ async function acceptInvite() {
             token: inviteToken
         });
         const inviteData = res.data;
-        console.log(inviteData);
         userStore.workspace = inviteData.workspace;
         userStore.role = inviteData.role;
     } catch (error) {

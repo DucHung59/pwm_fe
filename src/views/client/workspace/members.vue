@@ -59,8 +59,6 @@ async function getAllMembers() {
 
         const data = res.data;
         members.value = data.members.data;
-        console.log(members.value);
-        
     } catch (error) {
         toast.error(error.message, "Lỗi");
     } finally {

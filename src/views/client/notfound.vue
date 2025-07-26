@@ -31,7 +31,6 @@ onMounted(() => {
   styleEl.rel = 'stylesheet'
   styleEl.href = '/src/assets/css/notfound.css'
   document.head.appendChild(styleEl)
-  console.log(styleEl);
 })
 
 onUnmounted(() => {

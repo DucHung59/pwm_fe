@@ -76,7 +76,7 @@
                     <div class="accordion-title" >
                         <div class="toggle flex items-center gap-1.5" @click="toggleOpen('issue')">
                             <i class="pi " :class="isIssueOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
-                            <p>Issues</p>
+                            <p>Công việc</p>
                         </div>
                     </div>
                     <div class="accordion-content" v-show="isIssueOpen">
@@ -91,7 +91,7 @@
                                 <thead>
                                     <tr>
                                         <th class="px-3 py-2 border">Key</th>
-                                        <th class="px-3 py-2 border">Tiêu đề</th>
+                                        <th class="px-3 py-2 border w-48">Tiêu đề</th>
                                         <th class="px-3 py-2 border">Trạng thái</th>
                                         <th class="px-3 py-2 border">Ngày hạn</th>
                                     </tr>
@@ -107,7 +107,7 @@
                                     <template v-else>
                                         <template v-if="tasks.length <= 0">
                                             <tr class="cursor-default hover:bg-cyan-100">
-                                                <td colspan="4" class="text-center py-3">Không có task được hiển thị</td>
+                                                <td colspan="4" class="text-center py-3 text-gray-400 font-medium">Không có task được hiển thị</td>
                                             </tr>
                                         </template>
                                         <template v-else>
@@ -119,7 +119,7 @@
                                                                     {{ task.task_key }}
                                                                 </RouterLink>
                                                             </td>
-                                                            <td class="text-center py-3">
+                                                            <td class="text-center py-3 w-48">
                                                                 <RouterLink :to="'/workspace/view/' + task.task_key">
                                                                     {{ task.subject }}
                                                                 </RouterLink>
@@ -141,19 +141,58 @@
                     </div>
                 </div>
             </div>
-            <div>
+            <div class="w-full mb-16">
                 <div class="accordion">
                     <div class="accordion-title flex justify-between" >
                         <div class="toggle flex items-center gap-1.5" @click="toggleOpen('recent')">
                             <i class="pi " :class="isRecentOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
-                            <p>Gần đây</p>
-                        </div>
-                        <div>
-                            <span>Lọc</span>
+                            <p>Hoạt động gần đây</p>
                         </div>
                     </div>
-                    <div class="accordion-content" v-show="isRecentOpen">
-                        
+                    <div class="w-full" v-show="isRecentOpen">
+                        <template v-for="log in logs">
+                            <div class="border-b border-gray-300 px-2 py-4 bg-cyan-50 hover:bg-cyan-100 cursor-default">
+                                <div class="flex gap-2 justify-between items-center">
+                                    <div class="flex gap-2">
+                                        <div>
+                                            <span v-if="log.type == 'add' "class="px-4 py-1 text-white text-sm font-medium rounded-full bg-emerald-500">
+                                                Thêm mới
+                                            </span>
+                                            <span v-if="log.type == 'update' "class="px-4 py-1 text-white text-sm font-medium rounded-full bg-amber-500">
+                                                Cập nhật
+                                            </span>
+                                            <span v-if="log.type == 'delete' "class="px-4 py-1 text-white text-sm font-medium rounded-full bg-rose-500">
+                                                Xóa bỏ
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span class="text-lg">{{ log.user.username }}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span>{{ dayjs(log.created_at).format('DD/MM/YYYY') }}</span>
+                                    </div>
+                                </div>
+                                <div class="px-4 py-2">
+                                    <div class="overflow-hidden text-ellipsis whitespace-nowrap w-full max-w-2xl">
+                                        <span v-html="log.description"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template v-if="!isLogLoading">
+                            <div class="text-center mt-4" v-if="logsTotal >= logsPerPage">
+                                <Button icon="pi pi-angle-down" rounded variant="outlined" @click="viewMoreLogs"/>
+                            </div>
+                            <div v-else class="text-center p-4">
+                                <span class="text-gray-400 font-medium">Đã đến cuối trang</span>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <div class="text-center mt-4">
+                                <i class="pi pi-spin pi-spinner" style="font-size: 1.4rem"></i>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -164,8 +203,10 @@
 import api from '@/api/axios';
 import { toastService } from '@/assets/js/toastHelper';
 import { useUserStore } from '@/store/user';
+import dayjs from 'dayjs';
 import { Button, Dialog, InputText, Message, SelectButton, useToast, Skeleton } from 'primevue';
 import { onMounted, ref, watch } from 'vue';
+
 
 const userStore = useUserStore();
 const workspace = ref(userStore.workspace);
@@ -175,6 +216,7 @@ const isPrjOpen = ref(true);
 const isIssueOpen = ref(true);
 const isRecentOpen = ref(true);
 const addProjectDialog = ref(false);
+const isLogLoading = ref(false);
 
 //data project
 const project_name = ref('');
@@ -188,18 +230,32 @@ const meFilter = ref("AssignTo");
 //data task
 const tasks = ref({});
 
+//data log
+const logs = ref({});
+
 //Paginate
 const perPage = 10;
 const total = ref(0);
 const currentPage = ref(1);
 
+const logsPerPage = ref(15);
+const logsTotal = ref(0);
+
 //handle UI
 const isAddProjectLoading = ref(false);
-const isTasksLoading = ref(false)
+const isTasksLoading = ref(false);
+const showFull = ref(false);
+
 const me = [
     { label: "Dành cho tôi", value: "AssignTo"},
     { label: "Tạo bởi tôi", value: "CreatedBy" }
 ]
+
+
+function viewMoreLogs() {
+    const perPage = logsPerPage.value + 10;
+    getLogsByWorkspace(perPage);
+}
 
 function toUppercase(e) {
   project_key.value = e.target.value.toUpperCase()
@@ -252,7 +308,6 @@ async function addProject() {
             project_key: project_key.value,
         })
 
-        console.log(response);
         toast.success('Thêm dự án thành công');
         addProjectDialog.value = false;
         getProject();
@@ -269,8 +324,6 @@ async function getProject() {
         const response = await api.get('/project/get');
     
         projects.value = response.data.projects;
-        console.log(projects.value);
-        
     } catch (error) {
         console.log(error);
     }
@@ -286,7 +339,6 @@ async function getTasksByAssginee() {
             tasks.value = result.task.data;
             total.value - result.total;
             currentPage.value = result.current_page;
-            console.log(tasks.value);
         }
         
     } catch (error) {
@@ -307,7 +359,6 @@ async function getTasksByCreator() {
             tasks.value = result.task.data;
             total.value - result.total;
             currentPage.value = result.current_page;
-            console.log(tasks.value);
         }
     } catch (error) {
         console.log(error.message);
@@ -316,9 +367,31 @@ async function getTasksByCreator() {
     }
 }
 
+async function getLogsByWorkspace(perPage = 15) {
+    try {
+        isLogLoading.value = true;
+        const response = await api.get('log/getByWorkspace', {
+            params: {
+                workspace_id: workspace.value.id,
+                perPage: perPage,
+            }
+        })
+
+        const result = response.data;
+        logs.value = result.logs.data;
+        logsTotal.value = result.logs.total;
+        logsPerPage.value = result.logs.per_page;
+    } catch (error) {
+        console.log(error.message);
+    } finally {
+        isLogLoading.value = false;
+    }
+}
+
 onMounted(() => {
     getProject();
     getTasksByAssginee();
+    getLogsByWorkspace();
 })
 
 watch(project_key, (newVal) => {

@@ -3,7 +3,7 @@
         <div class="settings-sidebar">
             <ul>
                 <li class="sidebar-items">
-                    <p>{{ workspace.workspace_name }}</p>
+                    <p class="text-2xl font-medium">{{ workspace.workspace_name }}</p>
                 </li>
                 <li class="sidebar-items">
                     <div class="flex items-center gap-2">
@@ -12,11 +12,6 @@
                     </div>
                     <div class="detail-settings">
                         <ul>
-                            <li :class="{ active: activeSetting === 'space' }"
-                                @click="setActive('space')"
-                            >
-                                Space
-                            </li>
                             <li :class="{ active: activeSetting === 'info' }"
                                 @click="setActive('info')"
                             >Thông tin</li>
@@ -101,33 +96,38 @@
                     </Dialog>
                     <Dialog v-model:visible="openEditRoleDialog" header="Sửa quyền thành viên" maximizable modal :draggable="false" resizable="false" :style="{ width: '50vw' }">
                         <div>
-                            <p class="mb-2"><strong>{{ selectedMember?.user?.username }}</strong> ({{ selectedMember?.user?.email }})</p>
-                            <div class="flex flex-col items-center gap-2">
-                                <div class="flex flex-wrap gap-4">
-                                    <label class="font-semibold">Vai trò:</label>
-                                    <div class="flex items-center gap-2">
-                                        <RadioButton v-model="editedRole" inputId="manager" name="role" value="manager" />
-                                        <label for="manager">Quản lý</label>
+                            <template v-if="selectedMember?.user?.username == 'admin'">
+                                Admin không thể chỉnh sửa quyền bản thân!
+                            </template>
+                            <template v-else>
+                                <p class="mb-2"><strong>{{ selectedMember?.user?.username }}</strong> ({{ selectedMember?.user?.email }})</p>
+                                <div class="flex flex-col items-center gap-2">
+                                    <div class="flex flex-wrap gap-4">
+                                        <label class="font-semibold">Vai trò:</label>
+                                        <div class="flex items-center gap-2">
+                                            <RadioButton v-model="editedRole" inputId="manager" name="role" value="manager" />
+                                            <label for="manager">Quản lý</label>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <RadioButton v-model="editedRole" inputId="member" name="role" value="member" />
+                                            <label for="member">Thành viên</label>
+                                        </div>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <RadioButton v-model="editedRole" inputId="member" name="role" value="member" />
-                                        <label for="member">Thành viên</label>
+                                    <div class="flex flex-col gap-2">
+                                        <p v-if="editedRole == 'manager'" class="text-sm text-gray-600">Quản lý cài đặt Workspace: người dùng, thành viên, dự án</p>
+                                        <p v-if="editedRole == 'member'" class="text-sm text-gray-600">Tham gia vào Workspace chỉnh sửa, triển khai tiến độ dự án</p>
                                     </div>
                                 </div>
-                                <div class="flex flex-col gap-2">
-                                    <p v-if="editedRole == 'manager'" class="text-sm text-gray-600">Quản lý cài đặt Workspace: người dùng, thành viên, dự án</p>
-                                    <p v-if="editedRole == 'member'" class="text-sm text-gray-600">Tham gia vào Workspace chỉnh sửa, triển khai tiến độ dự án</p>
-                                </div>
-                            </div>
-                            <Button
-                                label="Lưu"
-                                icon="pi pi-check"
-                                :loading="isUpdatingRole"
-                                @click="updateMemberRole"
-                                rounded
-                                size="small"
-                                class="mt-2"
-                            />
+                                <Button
+                                    label="Lưu"
+                                    icon="pi pi-check"
+                                    :loading="isUpdatingRole"
+                                    @click="updateMemberRole"
+                                    rounded
+                                    size="small"
+                                    class="mt-2"
+                                />
+                            </template>
                         </div>
                     </Dialog>
                     <div>
@@ -382,8 +382,6 @@ async function getMembers(page = 1) {
         members.value = data.members.data;
         total.value = data.members.total;
         currentPage.value = data.members.current_page;
-        console.log(total.value, currentPage.value);
-        
     } catch (error) {
         console.log(error.message);
                 
@@ -406,7 +404,6 @@ async function getInviteMembers(page = 1) {
         inviteMembers.value = data.invites.data;
         total.value = data.invites.total;
         currentPage.value = data.invites.current_page;
-        console.log(data);
     } catch (error) {
         console.log(error.message);
     } finally {
@@ -428,8 +425,6 @@ async function inviteMember() {
         });
 
         const data = response.data;
-        console.log(data);
-
         toast.success('Thành viên đã được mời', 'Thành công');
         openAddMemberDialog.value = false;
         newMemberEmail.value = '';
@@ -450,7 +445,6 @@ async function getProjects() {
         projects.value = result.projects.data;
         total.value = result.projects.total;
         currentPage.value = result.projects.current_page;
-        console.log(projects.value);
     } catch (error) {
         console.log(error.message);
         

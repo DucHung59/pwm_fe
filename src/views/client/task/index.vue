@@ -12,6 +12,27 @@
         </div>
         <div class="mx-16 mt-8 mb-24 cursor-default">
             <template v-if="task.id">
+                <Dialog v-model:visible="openEditTaskDialog" :style="{width: '50vw'}" header="Chỉnh sửa nội dung công việc" :draggable="false" :modal="true">
+                    <div>
+                        <Select v-model="category" :options="issues" optionLabel="issue_type" optionValue="id" placeholder="Chọn danh mục" class="w-full md:w-56" />
+                    </div>
+                    <div class="my-4">
+                        <label for="subject">Tiêu đề</label>
+                        <InputText id="subject" v-model="subject" class="w-full"/>
+                    </div>
+                    <div class="my-4">
+                        <label for="description">Mô tả</label>
+                        <Editor v-model="description" editorStyle="height: 200px" style="width: 100%"/>
+                    </div>
+                    <div class="my-4 flex gap-2 items-center">
+                        <label for="priority">Mức độ ưu tiên</label>
+                        <Select v-model="priority" :options="priorities" optionLabel="label" optionValue="value" placeholder="Chọn " class="w-full md:w-56" />
+                    </div>
+                    <div class="my-4 flex gap-2 items-center justify-center">
+                        <Button label="Hủy" severity="secondary" variant="outlined" class="w-16" @click="openEditTaskDialog = false"/>
+                        <Button label="Sửa" class="w-16" :loading="isUpdateTask" loadingIcon="pi pi-spin pi-spinner" @click="update"/>
+                    </div>
+                </Dialog>
                 <div class="flex justify-between items-center">
                     <div class="flex justify-between items-center gap-2">
                         <p>
@@ -33,7 +54,12 @@
                     </div>
                 </div>
                 <div class="my-5">
-                    <p class="text-2xl font-medium">{{ task.subject }}</p>
+                    <div class="flex items-center justify-between">
+                        <p class="text-2xl font-medium">{{ task.subject }}</p>
+                        <template v-if="userStore.isSystemAdmin || userStore.role == 'manager'">
+                            <SpeedDial :model="taskControls" direction="left" v-if="task.id"/>
+                        </template>
+                    </div>
                     <div class="border-1 border-gray-400 p-4 rounded-md my-4">
                         <div class="flex gap-2">
                             <button
@@ -49,7 +75,10 @@
                             </div>
                         </div>
                         <div class="p-4 my-4 border-b border-gray-400">
-                            <span v-html="task.description"></span>
+                            <span ref="htmlContainer" v-html="task.description"></span>
+                            <div v-if="showModal" class="modal" @click="closeModal">
+                                <img :src="currentImage" class="modal-img" />
+                            </div>
                         </div>
                         <div class="grid grid-cols-2 gap-8">
                             <div class="grid grid-cols-[12rem_1fr] items-center gap-2 border-b border-gray-400 p-2">
@@ -60,16 +89,21 @@
                             </div>
                             <div class="grid grid-cols-[12rem_1fr] items-center gap-2 border-b border-gray-400 p-2">
                                 <span>Người được giao: </span>
-                                <div class="flex items-center gap-2">
-                                    <button
-                                        class="w-8 h-8 rounded-full text-white flex items-center justify-center text-sm font-semibold uppercase"
-                                        :style="{ backgroundColor: stringToColor(task.assignee_user.username) }"
-                                        v-tooltip.bottom="task.assignee_user.username"
-                                        >
-                                        {{ getInitial(task.assignee_user.username) }}
-                                    </button>
-                                    <span>{{ task.assignee_user.username }}</span>  
-                                </div>
+                                <template v-if="task.assignee_user">
+                                    <div class="flex items-center gap-2">
+                                        <button
+                                            class="w-8 h-8 rounded-full text-white flex items-center justify-center text-sm font-semibold uppercase"
+                                            :style="{ backgroundColor: stringToColor(task.assignee_user.username) }"
+                                            v-tooltip.bottom="task.assignee_user.username"
+                                            >
+                                            {{ getInitial(task.assignee_user.username) }}
+                                        </button>
+                                        <span>{{ task.assignee_user.username }}</span>  
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <span class="text-gray-400 font-medium">Không có</span>
+                                </template>
                             </div>
                             <div class="grid grid-cols-[12rem_1fr] items-center gap-2 border-b border-gray-400 p-2">
                                 <span>Mức độ ưu tiên:</span>
@@ -84,7 +118,7 @@
                 <div>
                     <p class="text-lg font-medium">Bình luận <span class="text-sm font-medium text-gray-500">({{ comments.length }})</span></p>
                     <div class="border-1 border-gray-400 p-4 rounded-md my-4">
-                        <template v-for="comment in comments">
+                        <template v-for="(comment, index) in comments">
                             <div class="border-b border-gray-400 p-4">
                                 <div class="flex gap-2">
                                     <button
@@ -100,15 +134,18 @@
                                     </div>
                                 </div>
                                 <div class="p-4">
-                                    <span v-html="comment.comment"></span>
+                                    <span :ref="el => commentRefs[index] = el" v-html="comment.comment"></span>
                                 </div>
                             </div>
                         </template>
                     </div>
                 </div>
             </template>
+            <template v-else>
+                <Skeleton height="2rem" class="mb-2" borderRadius="16px"></Skeleton>
+            </template>
         </div>
-        <div class="p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] left-[60px] fixed bottom-0 right-0 bg-white">
+        <div class="p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] left-[60px] fixed bottom-0 right-0 bg-white" v-if="task.is_del != 9">
             <!-- Trạng thái gọn -->
             <div
                 v-if="!expanded"
@@ -127,33 +164,33 @@
 
             <!-- Trạng thái mở rộng -->
             <transition name="fade">
-            <div v-show="expanded" class="space-y-3">
-                <!-- Comment box -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-                    <div class="md:col-span-2">
-                        <Editor v-model="comment" editorStyle="height: 200px" style="width: 100%"/>
+                <div v-show="expanded" class="space-y-3">
+                    <!-- Comment box -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                        <div class="md:col-span-2">
+                            <Editor v-model="comment" editorStyle="height: 200px" style="width: 100%"/>
+                        </div>
+                        <div class="md:col-span-1">
+                            <div class="grid grid-cols-[8rem_1fr] my-4 gap-2 items-center">
+                                <span>Trạng thái:</span>
+                                <Select v-model="selectedStatus" :options="statuses" optionLabel="status_type" optionValue="id" placeholder="Chọn trạng thái" class="w-full md:w-56"/>
+                            </div>
+                            <div class="grid grid-cols-[8rem_1fr] my-4 gap-2 items-center">
+                                <span>Chuyển tới:</span>
+                                <Select v-model="assignee" :options="members" optionLabel="user.username" optionValue="user.id" placeholder="Chọn " class="w-full md:w-56" />
+                            </div>
+                            <div class="grid grid-cols-[8rem_1fr] my-4 gap-2 items-center">
+                                <span>Hạn chót:</span>
+                                <DatePicker v-model="due_date" placeholder="Chọn hạn chót" showIcon  dateFormat="dd/mm/yy" class="w-full md:w-56" />
+                            </div>
+                        </div>
                     </div>
-                    <div class="md:col-span-1">
-                        <div class="grid grid-cols-[8rem_1fr] my-4 gap-2 items-center">
-                            <span>Trạng thái:</span>
-                            <Select v-model="selectedStatus" :options="statuses" optionLabel="status_type" optionValue="id" placeholder="Chọn trạng thái" class="w-full md:w-56"/>
-                        </div>
-                        <div class="grid grid-cols-[8rem_1fr] my-4 gap-2 items-center">
-                            <span>Chuyển tới:</span>
-                            <Select v-model="assignee" :options="members" optionLabel="user.username" optionValue="user.id" placeholder="Chọn " class="w-full md:w-56" />
-                        </div>
-                        <div class="grid grid-cols-[8rem_1fr] my-4 gap-2 items-center">
-                            <span>Hạn chót:</span>
-                            <DatePicker v-model="due_date" placeholder="Chọn hạn chót" showIcon  dateFormat="dd/mm/yy" class="w-full md:w-56" />
-                        </div>
+                    <!-- Action buttons -->
+                    <div class="flex justify-center gap-2">
+                        <Button @click="collapse" rounded label="Đóng" icon="pi pi-times" variant="outlined"/>
+                        <Button @click="addComment" rounded label="Gửi" :loading="isAddCommentLoading" loadingIcon="pi pi-spin pi-spinner" icon="pi pi-send" />
                     </div>
                 </div>
-                <!-- Action buttons -->
-                <div class="flex justify-center gap-2">
-                    <Button @click="collapse" rounded label="Đóng" icon="pi pi-times" variant="outlined"/>
-                    <Button @click="addComment" rounded label="Gửi" :loading="isAddCommentLoading" loadingIcon="pi pi-spin pi-spinner" icon="pi pi-send" />
-                </div>
-            </div>
             </transition>
         </div>
     </div>
@@ -168,6 +205,22 @@
   opacity: 0;
   transform: scale(0.95);
 }
+
+.modal {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-img {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+}
 </style>
 <script setup>
 import api from '@/api/axios';
@@ -175,18 +228,21 @@ import Sidebar from '@/components/common/Sidebar.vue';
 import FlameIcon from '@/components/icons/FlameIcon.vue';
 import dayjs from 'dayjs';
 import { onMounted, ref, computed, watch, nextTick } from 'vue';
-import { useRoute } from 'vue-router';
-import { Button, Select, DatePicker, useToast } from 'primevue';
+import { useRoute, useRouter } from 'vue-router';
+import { Button, Select, DatePicker, useToast, SpeedDial, Dialog, InputText } from 'primevue';
 import Editor from 'primevue/editor';
 import { toastService } from '@/assets/js/toastHelper';
+import { useUserStore } from '@/store/user';
 
 const route = useRoute();
+const router = useRouter();
 const task_key = computed(() => route.params.task_key);
 const project_key = computed(() => {
   const key = task_key.value;
   return key.substring(0, key.lastIndexOf('-'));
 });
 
+const userStore = useUserStore();
 
 const project = ref({});
 const statuses = ref([]);
@@ -201,10 +257,68 @@ const assignee = ref();
 const due_date = ref();
 const comment = ref(null);
 
+const openEditTaskDialog = ref(false);
+const isUpdateTask = ref(false);
+
 const toast = new toastService(useToast());
 const isTaskLoading = ref(false);
 const isAddCommentLoading = ref(false);
 const expanded = ref(false);
+
+const htmlContent = ref(null);
+const htmlContainer = ref('');
+const showModal = ref(false);
+const currentImage = ref(null);
+
+const commentRefs = ref([])
+
+const taskControls = computed(() => {
+    const items = [];
+
+    if (task.value.is_del != 9) {
+        items.push({
+            label: 'Update',
+            icon: 'pi pi-pen-to-square',
+            command: () => {
+                openEditTaskDialog.value = true;
+                subject.value = task.value.subject;
+                category.value = task.value.issue_type.id;
+                description.value = task.value.description;
+                priority.value = task.value.priority;
+            }
+        });
+        items.push({
+            label: 'Delete',
+            icon: 'pi pi-trash',
+            command: () => {
+                softDelete();
+            }
+        });
+    } else {
+        items.push({
+            label: 'Delete',
+            icon: 'pi pi-undo',
+            command: () => {
+
+            }
+        })
+    }
+
+
+    return items;
+});
+
+const priorities = [
+    {label: 'Thấp', value: 'low'},
+    {label: 'Bình thường', value: 'normal'},
+    {label: 'Cao', value: 'high'},
+]
+
+const subject = ref();
+const category = ref();
+const description = ref();
+const priority = ref();
+
 
 //UI function
 const expand = () => {
@@ -215,6 +329,30 @@ const collapse = () => {
   expanded.value = false;
   comment.value = '';
 };
+
+const processImagesIn = (container) => {
+  if (!container) return
+  const images = container.querySelectorAll('img[src^="data:image"]')
+  images.forEach(img => {
+    img.style.width = '400px'
+    img.style.cursor = 'pointer'
+    img.onclick = () => {
+      currentImage.value = img.src
+      showModal.value = true
+    }
+  })
+}
+
+const attachImageEvents = () => {
+    processImagesIn(htmlContainer.value)
+
+    commentRefs.value.forEach(el => processImagesIn(el))
+}
+
+const closeModal = () => {
+  showModal.value = false
+  currentImage.value = null
+}
 
 function getInitial(name) {
   return name
@@ -268,9 +406,15 @@ async function getTask() {
         const result = response.data;
         task.value = result.task;
         comments.value = result.comments.data;
+        htmlContent.value = task.description;
         selectedStatus.value = task.value.status;
         assignee.value = task.value.assignee;
         due_date.value = task.value.due_date;
+
+        commentRefs.value = Array(comments.value.length).fill(null);
+        await nextTick(() => {
+            attachImageEvents()
+        })
         
     } catch (error) {
         console.log(error.message);
@@ -282,15 +426,7 @@ async function getTask() {
 async function addComment() {
     const date = due_date.value ? dayjs(due_date.value).format('DD-MM-YYYY HH:mm:ss') : null;
     try {
-        isAddCommentLoading.value = true
-        console.log(
-            `id: ${task.value.id} \n
-            comment: ${comment.value} \n
-            status: ${selectedStatus.value} \n
-            asignee: ${assignee.value} \n
-            due_date: ${date}
-            ` 
-        );
+        isAddCommentLoading.value = true;
         
         const response = await api.post('task/addComment', {
             id: task.value.id,
@@ -313,6 +449,50 @@ async function addComment() {
     }
 }
 
+async function update() {
+    try {
+        isUpdateTask.value = true;
+        const response = await api.post('/task/update', {
+            task_id: task.value.id,
+            subject: subject.value,
+            category: category.value,
+            description: description.value,
+            priority: priority.value,
+        })
+
+        const result = response.data;
+        if(result.success) {
+            getTask();
+            toast.success('Cập nhật thành công', 'Thông báo');
+            openEditTaskDialog.value = false;
+        } else {
+            toast.error(result.message, 'Có lỗi')
+        }
+    } catch (error) {
+        console.log(error.message);
+    } finally {
+        isUpdateTask.value = false;
+    }
+}
+
+async function softDelete() {
+    try {
+        const response = await api.post('task/delete', {
+            task_id: task.value.id,
+        })
+        
+        const result = response.data;
+        if(result.success) {
+            toast.success('Xóa thành công', 'Thông báo');
+            router.push(`/workspace/task/${project_key.value}`);
+        } else {
+            toast.error(`Xóa thất bại: ${result.message}`, 'Thất bại');
+        }
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
 onMounted(() => {
     getProject();
     getTask();
@@ -321,4 +501,10 @@ onMounted(() => {
 watch(project_key, () => {
     getProject();
 });
+
+watch(htmlContent, () => {
+  nextTick(() => {
+    attachImageEvents()
+  })
+})
 </script>

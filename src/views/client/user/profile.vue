@@ -11,13 +11,13 @@
                     <img :src="'/logo_rikai.png'" alt="logo" width="80px">
                 </RouterLink>
             </div>
-            <p class="text-[24px] font-semibold text-primary">Cài đặt cá nhân</p>
         </div>
         <Button icon="pi pi-sign-out" variant="outlined" rounded @click="signout"/>
     </div>
     <div style="margin-top: 60px;">
         <Tabs value="0">
-            <div class="flex justify-center">
+            <div class="flex flex-col items-center justify-center my-4">
+                <p class="text-[24px] font-semibold text-primary">Cài đặt cá nhân</p>
                 <TabList>
                     <Tab value="0">Cá nhân</Tab>
                     <Tab value="1">Bảo mật</Tab>
@@ -29,13 +29,20 @@
                     <TabPanel value="0">
                         <div class="mt-4">
                             <div class="flex flex-col gap-2 mt-4">
-                                <label for="username">Username</label>
+                                <label for="username">Tên người dùng</label>
                                 <InputText id="username" v-model="username" autocomplete="off" :disabled="userStore.isSystemAdmin"/>
+                                <Message size="small" severity="secondary" variant="simple" class="px-4">
+                                    <p>
+                                        Tên hiển thị trong trong xuyên suốt quá trình triển khai dự án, đề xuất sử dụng 
+                                        <span class="text-red-400 uppercase">Họ.Tên</span>
+                                        của bạn
+                                    </p>
+                                </Message>
                             </div>
                             <div class="flex flex-col gap-2 mt-4">
                                 <label for="email">Email</label>
                                 <InputText id="email" v-model="email" autocomplete="off" disabled/>
-                                <Message size="small" severity="secondary" variant="simple">
+                                <Message size="small" severity="secondary" variant="simple" class="px-4">
                                     <div class="flex items-center gap-2">
                                         <i class="pi" :class="verify ? 'pi-check' : 'pi-times'"></i>
                                         {{ verify ? 'Verified' : 'Unverified' }}
@@ -44,8 +51,8 @@
                             </div>
                             <template v-if="!userStore.isSystemAdmin">
                                 <div class="button-feild flex justify-between mt-4">
-                                    <Button icon="pi pi-trash" label="Xóa tài khoản" variant="text"/>
-                                    <Button label="Chỉnh sửa"/>
+                                    <Button icon="pi pi-trash" label="Xóa tài khoản" severity="danger" variant="text"/>
+                                    <Button label="Chỉnh sửa" icon="pi pi-pencil" @click="changeAccountInfo"/>
                                 </div>
                             </template>
                         </div>
@@ -55,14 +62,39 @@
                             Bạn đang đăng nhập với tài khoản Admin, không thể chỉnh sửa thông tin này
                         </template>
                         <template v-else>
-
+                            <div class="flex flex-col items-center justify-between">
+                                <div class="w-lg">
+                                    <Label class="text-lg font-medium">Độ phức tạp của mật khẩu</Label>
+                                    <ProgressBar
+                                        :value="user.password_complex*20" class="custom-progressbar w-full my-4">
+                                        {{ user.password_complex }}
+                                    </ProgressBar>
+                                </div>
+                                <div class="my-4">
+                                    <Button label="Đổi mật khẩu" icon="pi pi-pencil" @click="openChangePasswordDialog = true" />
+                                </div>
+                            </div>
+                            <Dialog v-model:visible="openChangePasswordDialog" :style="{width: '50vw'}" @hide="onDialogHide" header="Thay đổi mật khẩu" :draggable="false" :modal="true">
+                                <div class="my-4">
+                                    <label for="password">Password cũ</label>
+                                    <InputText id="password" v-model="oldPassword" class="w-full" type="password"/>
+                                </div>
+                                <div class="my-4">
+                                    <label for="password">Password mới</label>
+                                    <InputText id="password" v-model="newPassword" class="w-full" type="password"/>
+                                </div>
+                                <div class="flex justify-around mt-4 pt-4">
+                                    <Button label="Hủy" class="w-75" severity="secondary" size="small" variant="outlined" @click="openChangePasswordDialog = false"/>
+                                    <Button label="Sửa" class="w-75" size="small" variant="outlined" @click="changePassword" :loading="isChangePassword" loadingIcon="pi pi-spin pi-spinner"/>
+                                </div>
+                            </Dialog>
                         </template>
                     </TabPanel>
                     <TabPanel value="2">
                         <template v-if="userStore.isSystemAdmin">
-                            Bố mày là admin
+                            <span>Bạn đang đăng nhập với tài khoản admin, chọn workspace dưới đây để quản lý</span>
                             <div class="my-4 flex justify-between items-center">
-                                <label for="">Lựa chọn Workspace</label>
+                                <label for="" class="text-lg font-medium">Lựa chọn Workspace</label>
                                 <RouterLink to="/create_workspace">
                                     <Button label="Tạo workspace" icon="pi pi-plus" rounded variant="outlined"/>
                                 </RouterLink>
@@ -98,10 +130,15 @@
         </Tabs>
     </div>
 </template>
+<style>
+.custom-progressbar .p-progressbar-value {
+  transition: background-color 0.3s ease;
+}
+</style>
 <script setup>
 import { useUserStore } from '@/store/user';
-import { Tabs, Tab, TabList, TabPanels, TabPanel, Button, InputText, Message, Select } from 'primevue';
-import { ref } from 'vue';
+import { Tabs, Tab, TabList, TabPanels, TabPanel, Button, InputText, Message, Select, ProgressBar, Dialog, FloatLabel } from 'primevue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -115,12 +152,25 @@ const username = user.username;
 const email = user.email;
 const verify = user.verify;
 
-const selectedWorkspace = ref(workspaces[0]?.id);
+const selectedWorkspace = ref();
+const openChangePasswordDialog = ref(false);
 
-console.log(userStore);
+//UI function
+const getColor = (level) => {
+  switch (level) {
+    case 1: return '#f87171'
+    case 2: return '#fb7185'
+    case 3: return '#fbbf24'
+    case 4: return '#facc15'
+    case 5: return '#4ade80'
+    default: return '#d1d5db' // màu xám nhạt mặc định
+  }
+}
+
+
+//Data function
 
 function onWorkspaceChange() {
-    console.log(selectedWorkspace.value);
     userStore.getWorkspaceById(selectedWorkspace.value);
 }
 
@@ -132,5 +182,23 @@ async function signout() {
         console.error('Logout failed:', error);
     }
 }
+
+async function changeAccountInfo() {
+    console.log(username.value);
+}
+
+onMounted(() =>{ 
+    const el = document.querySelector('.custom-progressbar .p-progressbar-value')
+    if (el) {
+        el.style.backgroundColor = getColor(user.password_complex)
+    }
+})
+
+watch(() => user.password_complex, (newVal) => {
+  const el = document.querySelector('.custom-progressbar .p-progressbar-value')
+  if (el) {
+    el.style.backgroundColor = getColor(newVal)
+  }
+})
 
 </script>

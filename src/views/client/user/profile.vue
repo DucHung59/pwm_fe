@@ -76,11 +76,11 @@
                             </div>
                             <Dialog v-model:visible="openChangePasswordDialog" :style="{width: '50vw'}" @hide="onDialogHide" header="Thay đổi mật khẩu" :draggable="false" :modal="true">
                                 <div class="my-4">
-                                    <label for="password">Password cũ</label>
-                                    <InputText id="password" v-model="oldPassword" class="w-full" type="password"/>
+                                    <label for="password">Mật khẩu hiện tại</label>
+                                    <InputText id="password" v-model="currentPassword" class="w-full" type="password"/>
                                 </div>
                                 <div class="my-4">
-                                    <label for="password">Password mới</label>
+                                    <label for="password">Mật khẩu mới</label>
                                     <InputText id="password" v-model="newPassword" class="w-full" type="password"/>
                                 </div>
                                 <div class="flex justify-around mt-4 pt-4">
@@ -102,7 +102,7 @@
                             <div class="my-4 flex justify-between items-center">
                                 <Select v-model="selectedWorkspace" :options="workspaces" optionLabel="workspace_name" optionValue="id" placeholder="Lựa chọn Workspace" class="w-lg" @change="onWorkspaceChange"/>
                                 <RouterLink to="/workspace/dashboard">
-                                    <Button label="Đi tới Dasboard" icon="pi pi-arrow-up-right"/>
+                                    <Button label="Tới Dashboard" icon="pi pi-arrow-up-right" :loading="isChangeWorkspace" loadingIcon="pi pi-spin pi-spinner"/>
                                 </RouterLink>
                             </div>
                         </template>
@@ -119,7 +119,7 @@
                                 <div class="flex justify-around items-center gap-2 mt-4">
                                     <div class="text-lg">Workspace: <span class="font-semibold">{{ workspace.workspace_name }}</span></div>
                                     <RouterLink to="/workspace/dashboard">
-                                        <Button label="Đi tới Dasboard" icon="pi pi-arrow-up-right"/>
+                                        <Button label="Tới Dashboard" icon="pi pi-arrow-up-right"/>
                                     </RouterLink>
                                 </div>
                             </div>
@@ -136,16 +136,20 @@
 }
 </style>
 <script setup>
+import api from '@/api/axios';
+import { toastService } from '@/assets/js/toastHelper';
 import { useUserStore } from '@/store/user';
-import { Tabs, Tab, TabList, TabPanels, TabPanel, Button, InputText, Message, Select, ProgressBar, Dialog, FloatLabel } from 'primevue';
+import { Tabs, Tab, TabList, TabPanels, TabPanel, Button, InputText, Message, Select, ProgressBar, Dialog, FloatLabel, useToast } from 'primevue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const userStore = useUserStore();
 
+const toast = new toastService(useToast());
 const workspace = userStore.workspace;
 const workspaces = userStore.workspaces;
+
 
 const user = userStore.user;
 const username = user.username;
@@ -154,6 +158,11 @@ const verify = user.verify;
 
 const selectedWorkspace = ref();
 const openChangePasswordDialog = ref(false);
+const isChangeWorkspace = ref(false);
+
+const currentPassword = ref();
+const newPassword = ref();
+const isChangePassword = ref(false);
 
 //UI function
 const getColor = (level) => {
@@ -170,8 +179,10 @@ const getColor = (level) => {
 
 //Data function
 
-function onWorkspaceChange() {
-    userStore.getWorkspaceById(selectedWorkspace.value);
+async function onWorkspaceChange() {
+    isChangeWorkspace.value = true;
+    await userStore.getWorkspaceById(selectedWorkspace.value);
+    isChangeWorkspace.value = false;
 }
 
 async function signout() {
@@ -185,6 +196,29 @@ async function signout() {
 
 async function changeAccountInfo() {
     console.log(username.value);
+}
+
+async function changePassword() {
+    try {
+        isChangePassword.value = true;
+        const response = await api.post('/auth/change-password', {
+            current_password: currentPassword.value,
+            new_password: newPassword.value,
+        })
+
+        const result = response.data;
+        if (result.success) {
+            toast.success(result.message, 'Thông báo');
+            openChangePasswordDialog.value = false;
+            userStore.fetchUser();
+        } else {
+            toast.warn(result.success, 'Thông báo');
+        }
+    } catch (error) {
+        console.log(error.message);
+    } finally {
+        isChangePassword.value = false;
+    }
 }
 
 onMounted(() =>{ 

@@ -28,6 +28,16 @@
                                     <InputText id="project-key" v-model="project_key" aria-describedby="project-key-help" @input="toUppercase"/>
                                     <Message :severity="project_key_error ? 'error' : 'secondary'" class="pl-4 italic" size="small" variant="simple">Khóa dự án không được để trống, chỉ bao gồm các chữ cái in hoa, số và gạch dưới</Message>
                                 </div>
+                                <div class="flex flex-col gap-2 pt-4">  
+                                    <label for="project-key" class="pl-4">Ngày bắt đầu</label>
+                                    <DatePicker v-model="start_date" placeholder="Chọn ngày bắt đầu" showIcon  dateFormat="dd/mm/yy" class="w-full md:w-56" />
+                                    <Message severity="error" class="pl-4 italic" size="small" variant="simple" v-if="start_date_error">Không được chọn ngày trong quá khứ</Message>
+                                </div>
+                                <div class="flex flex-col gap-2 pt-4">  
+                                    <label for="project-key" class="pl-4">Ngày kết thúc</label>
+                                    <DatePicker v-model="end_date" placeholder="Chọn ngày kết thúc" showIcon  dateFormat="dd/mm/yy" class="w-full md:w-56" />
+                                    <Message severity="error" class="pl-4 italic" size="small" variant="simple" v-if="end_date_error">Ngày kết thúc phải sau ngày bắt đầu</Message>
+                                </div>
                                 <div class="flex justify-around mt-4 pt-4">
                                     <Button label="Hủy" class="w-75" severity="secondary" size="small" variant="outlined" @click="addProjectDialog = false"/>
                                     <Button label="Thêm" class="w-75" size="small" variant="outlined" @click="addProject" :loading="isAddProjectLoading" loadingIcon="pi pi-spin pi-spinner"/>
@@ -36,38 +46,45 @@
                         </div>
                     </div>
                     <div class="accordion-content" v-show="isPrjOpen">
-                        <template v-for="project in projects" :key="project.id">
-                            <div class="accordion-item">
-                                <RouterLink class="relative group w-max" :to="`project/${project.project_key}`">
-                                    <div class="project-item gap-2 flex">
-                                        <img :src="'/project.png'" width="40px"/>
-                                        <div>
-                                            <p>{{ project.project_name }}</p>
-                                            <p class="text-[12px] project-key absolute group-hover:hidden" style="color: var(--color-gray-500);">
-                                                {{ project.project_key }}
-                                            </p>
-                                            <div class="text-[12px] list-action hidden group-hover:block">
-                                                <ul class="flex gap-2">
-                                                    <li>
-                                                        <RouterLink :to="'/workspace/add/' + project.project_key">
-                                                            Thêm Task
-                                                        </RouterLink>
-                                                    </li>
-                                                    <li>
-                                                        <RouterLink :to="'/workspace/task/' + project.project_key">
-                                                            Tasks
-                                                        </RouterLink>
-                                                    </li>
-                                                    <li>
-                                                        <RouterLink :to="'/workspace/settings/' + project.project_key">
-                                                            Cài đặt
-                                                        </RouterLink>
-                                                    </li>
-                                                </ul>
+                        <template v-if="projects.length > 0">
+                            <template v-for="project in projects" :key="project.id">
+                                <div class="accordion-item">
+                                    <RouterLink class="relative group w-max" :to="`project/${project.project_key}`">
+                                        <div class="project-item gap-2 flex">
+                                            <img :src="'/project.png'" width="40px"/>
+                                            <div>
+                                                <p>{{ project.project_name }}</p>
+                                                <p class="text-[12px] project-key absolute group-hover:hidden" style="color: var(--color-gray-500);">
+                                                    {{ project.project_key }}
+                                                </p>
+                                                <div class="text-[12px] list-action hidden group-hover:block">
+                                                    <ul class="flex gap-2">
+                                                        <li>
+                                                            <RouterLink :to="'/workspace/add/' + project.project_key">
+                                                                Thêm Task
+                                                            </RouterLink>
+                                                        </li>
+                                                        <li>
+                                                            <RouterLink :to="'/workspace/task/' + project.project_key">
+                                                                Tasks
+                                                            </RouterLink>
+                                                        </li>
+                                                        <li>
+                                                            <RouterLink :to="'/workspace/settings/' + project.project_key">
+                                                                Cài đặt
+                                                            </RouterLink>
+                                                        </li>
+                                                    </ul>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </RouterLink>
+                                    </RouterLink>
+                                </div>
+                            </template>
+                        </template>
+                        <template v-else>
+                            <div class="text-center border-t border-gray-400 p-4 cursor-default">
+                                <span class="font-medium text-gray-500">Không có dự án đã tham gia</span>
                             </div>
                         </template>
                     </div>
@@ -113,25 +130,24 @@
                                         <template v-else>
                                             <template v-for="task in tasks">
                                                 <tr class="cursor-default hover:bg-cyan-100">
-                                                        
-                                                            <td class="text-center py-3">
-                                                                <RouterLink :to="'/workspace/view/' + task.task_key">
-                                                                    {{ task.task_key }}
-                                                                </RouterLink>
-                                                            </td>
-                                                            <td class="text-center py-3 w-48">
-                                                                <RouterLink :to="'/workspace/view/' + task.task_key">
-                                                                    {{ task.subject }}
-                                                                </RouterLink>
-                                                            </td>
-                                                            <td class="text-center py-3">
-                                                                <span class="px-4 py-1 text-white font-medium rounded-full" 
-                                                                    :style="{ backgroundColor: task.status_info.status_color }">
-                                                                    {{task.status_info.status_type}}
-                                                                </span>
-                                                            </td>
-                                                            <td class="text-center py-3">{{ task.due_date ? task.due_date : 'Không có' }}</td>
-                                                    </tr>
+                                                    <td class="text-center py-3">
+                                                        <RouterLink :to="'/workspace/view/' + task.task_key">
+                                                            {{ task.task_key }}
+                                                        </RouterLink>
+                                                    </td>
+                                                    <td class="text-center py-3 w-48">
+                                                        <RouterLink :to="'/workspace/view/' + task.task_key">
+                                                            {{ task.subject }}
+                                                        </RouterLink>
+                                                    </td>
+                                                    <td class="text-center py-3">
+                                                        <span class="px-4 py-1 text-white font-medium rounded-full" 
+                                                            :style="{ backgroundColor: task.status_info.status_color }">
+                                                            {{task.status_info.status_type}}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-center py-3">{{ task.due_date ? task.due_date : 'Không có' }}</td>
+                                                </tr>
                                             </template>
                                         </template>
                                     </template>
@@ -190,7 +206,7 @@
                         </template>
                         <template v-else>
                             <div class="text-center mt-4">
-                                <i class="pi pi-spin pi-spinner" style="font-size: 1.4rem"></i>
+                                <i class="pi pi-spin pi-spinner" style="font-size: 1.4rem; color: var(--p-primary-400)"></i>
                             </div>
                         </template>
                     </div>
@@ -204,7 +220,7 @@ import api from '@/api/axios';
 import { toastService } from '@/assets/js/toastHelper';
 import { useUserStore } from '@/store/user';
 import dayjs from 'dayjs';
-import { Button, Dialog, InputText, Message, SelectButton, useToast, Skeleton } from 'primevue';
+import { Button, Dialog, InputText, Message, SelectButton, useToast, Skeleton, DatePicker } from 'primevue';
 import { onMounted, ref, watch } from 'vue';
 
 
@@ -221,8 +237,13 @@ const isLogLoading = ref(false);
 //data project
 const project_name = ref('');
 const project_key = ref('');
+const description = ref('');
+const start_date = ref(null);
+const end_date = ref(null);
 const project_name_error = ref(false);
 const project_key_error = ref(false);
+const start_date_error = ref(false);
+const end_date_error = ref(false);
 
 const projects = ref([]);
 const meFilter = ref("AssignTo");
@@ -263,6 +284,7 @@ function toUppercase(e) {
 
 function checkValidated() {
     const project_key_regex = /^[A-Z0-9_]+$/;
+    const today = dayjs().format('YYYY-MM-DD');
 
     let isValid = true;
 
@@ -274,13 +296,24 @@ function checkValidated() {
         project_name_error.value = true;
         isValid = false;
     }
+    if (dayjs(start_date.value).isBefore(today, 'day')) {
+        start_date_error.value = true;
+        isValid = false;
+    }
+
+    if ((!start_date.value && end_date.value) || dayjs(end_date.value).isBefore(dayjs(start_date.value), 'day')) {
+        end_date_error.value = true;
+        isValid = false;
+    }
     return isValid;
 }
 
 function onDialogHide() {
   project_key.value = '';
   project_name.value = '';
-  // reset các biến khác nếu có
+  description.value = '';
+  start_date.value = null;
+  end_date.value = null;
 }
 
 function toggleOpen(cate) {
@@ -306,6 +339,9 @@ async function addProject() {
             workspace_id: workspace.value.id,
             project_name: project_name.value,
             project_key: project_key.value,
+            description: description.value,
+            start_date: start_date.value,
+            end_date: end_date.value,
         })
 
         toast.success('Thêm dự án thành công');
@@ -400,6 +436,14 @@ watch(project_key, (newVal) => {
 
 watch(project_name, (newVal) => {
     project_name_error.value = false;
+})
+
+watch(start_date, (newVal) => {
+    start_date_error.value = false;
+})
+
+watch(end_date, (newVal) => {
+    end_date_error.value = false;
 })
 
 </script>

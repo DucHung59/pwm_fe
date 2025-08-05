@@ -14,7 +14,7 @@
             <template v-if="task.id">
                 <Dialog v-model:visible="openEditTaskDialog" :style="{width: '50vw'}" header="Chỉnh sửa nội dung công việc" :draggable="false" :modal="true">
                     <div>
-                        <Select v-model="category" :options="issues" optionLabel="issue_type" optionValue="id" placeholder="Chọn danh mục" class="w-full md:w-56" />
+                        <Select v-model="category" :options="issues" optionLabel="category_type" optionValue="id" placeholder="Chọn danh mục" class="w-full md:w-56" />
                     </div>
                     <div class="my-4">
                         <label for="subject">Tiêu đề</label>
@@ -37,8 +37,8 @@
                     <div class="flex justify-between items-center gap-2">
                         <p>
                             <span class="px-4 py-1 text-white font-medium rounded-full" 
-                                :style="{ backgroundColor: task.issue_type.issue_color }">
-                                {{task.issue_type.issue_type}}
+                                :style="{ backgroundColor: task.category_info.category_color }">
+                                {{task.category_info.category_type}}
                             </span>
                         </p>
                         <span class="text-lg font-medium">-</span>
@@ -56,7 +56,7 @@
                 <div class="my-5">
                     <div class="flex items-center justify-between">
                         <p class="text-2xl font-medium">{{ task.subject }}</p>
-                        <template v-if="userStore.isSystemAdmin || userStore.role == 'manager'">
+                        <template v-if="userStore.isSystemAdmin || userStore.projectRole == 'PManager'">
                             <SpeedDial :model="taskControls" direction="left" v-if="task.id"/>
                         </template>
                     </div>
@@ -84,7 +84,7 @@
                             <div class="grid grid-cols-[12rem_1fr] items-center gap-2 border-b border-gray-400 p-2">
                                 <span>Hạn chót:</span>
                                 <p>{{ task.due_date ? dayjs(task.due_date).format('DD/MM/YYYY') : "Không có" }}
-                                    <FlameIcon v-if="task.due_date && dayjs(task.due_date).isBefore(dayjs(), 'day')"/>
+                                    <FlameIcon v-if="task.due_date && dayjs(task.due_date).isSame(dayjs().subtract(3, 'day'), 'day')"/>
                                 </p>
                             </div>
                             <div class="grid grid-cols-[12rem_1fr] items-center gap-2 border-b border-gray-400 p-2">
@@ -170,7 +170,7 @@
                         <div class="md:col-span-2">
                             <Editor v-model="comment" editorStyle="height: 200px" style="width: 100%"/>
                         </div>
-                        <div class="md:col-span-1">
+                        <div class="md:col-span-1" v-if="assignee == userStore.user.id || !task.assignee || userStore.isProjectManager">
                             <div class="grid grid-cols-[8rem_1fr] my-4 gap-2 items-center">
                                 <span>Trạng thái:</span>
                                 <Select v-model="selectedStatus" :options="statuses" optionLabel="status_type" optionValue="id" placeholder="Chọn trạng thái" class="w-full md:w-56"/>
@@ -179,7 +179,7 @@
                                 <span>Chuyển tới:</span>
                                 <Select v-model="assignee" :options="members" optionLabel="user.username" optionValue="user.id" placeholder="Chọn " class="w-full md:w-56" />
                             </div>
-                            <div class="grid grid-cols-[8rem_1fr] my-4 gap-2 items-center">
+                            <div class="grid grid-cols-[8rem_1fr] my-4 gap-2 items-center" v-if="userStore.isSystemAdmin || userStore.projectRole=='PManager'">
                                 <span>Hạn chót:</span>
                                 <DatePicker v-model="due_date" placeholder="Chọn hạn chót" showIcon  dateFormat="dd/mm/yy" class="w-full md:w-56" />
                             </div>
@@ -282,7 +282,7 @@ const taskControls = computed(() => {
             command: () => {
                 openEditTaskDialog.value = true;
                 subject.value = task.value.subject;
-                category.value = task.value.issue_type.id;
+                category.value = task.value.category_info.id;
                 description.value = task.value.description;
                 priority.value = task.value.priority;
             }
@@ -440,6 +440,9 @@ async function addComment() {
         if(result.success) {
             toast.success('Thêm bình luận thành công', 'Thông báo');
             getTask();
+            collapse();
+        } else {
+            toast.error(result.message, 'Lỗi');
             collapse();
         }
     } catch (error) {

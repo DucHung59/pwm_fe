@@ -18,7 +18,7 @@
                                         {{ member.user.email.split('@')[0] }}
                                     </p>
                                 </div>
-                                <RouterLink to="workspace/activty">
+                                <RouterLink :to="`/workspace/activity/${member.user.id}/${member.user.username}`">
                                     <div class="activity-link px-8 py-2 hidden group-hover:block">
                                         Hoạt động
                                     </div>

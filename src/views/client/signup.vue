@@ -31,7 +31,7 @@
                         </FloatLabel>
                     </div>
                 </div>
-                <Button class="button" @click="signin" loading-icon="pi pi-spin pi-spinner" :loading="isLoading">Đăng ký</Button>
+                <Button class="button" @click="signin" loadingIcon="pi pi-spinner pi-spin" :loading="isLoading">Đăng ký</Button>
             </form>
             <div class="text-center mt-8">
                 <p>Bạn đã có tài khoản? <span class="other-signin"><RouterLink to="login">Đăng nhập</RouterLink></span></p>

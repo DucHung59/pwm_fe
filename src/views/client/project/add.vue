@@ -22,7 +22,7 @@
             <div class="mt-4">
                 <div class="flex flex-col gap-2">
                     <div>
-                        <Select v-model="selectedIssue" :options="issues" optionLabel="issue_type" optionValue="id" placeholder="Chọn danh mục" class="w-full md:w-56" />
+                        <Select v-model="selectedIssue" :options="issues" optionLabel="category_type" optionValue="id" placeholder="Chọn danh mục" class="w-full md:w-56" />
                     </div>
                     <InputText v-model="subject" placeholder="Tên công việc (bắt buộc)" class="w-full" />
                 </div>
@@ -60,6 +60,7 @@
 import api from '@/api/axios';
 import { toastService } from '@/assets/js/toastHelper';
 import Sidebar from '@/components/common/Sidebar.vue';
+import { useUserStore } from '@/store/user';
 import { Button, Select, InputText, DatePicker, useToast } from 'primevue';
 import Editor from 'primevue/editor';
 import { ref, computed, onMounted, watch } from 'vue';
@@ -68,6 +69,7 @@ import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
 const router = useRouter();
 const project_key = computed(() => route.params.project_key);
+const userStore = useUserStore();
 
 const project = ref({});
 const issues = ref([]);
@@ -121,6 +123,7 @@ async function getProject() {
         issues.value = response.data.issues;
         statuses.value = response.data.statuses;
         members.value = response.data.project.members;
+        userStore.setProjectContext(project.value.id);
     } catch (error) {
         console.log(error.message);
     }

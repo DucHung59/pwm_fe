@@ -20,15 +20,22 @@
                 </TabList>
                 <TabPanels>
                     <TabPanel value="0">
-                        <p class="m-0">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                            consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                        </p>
+                        <div class="p-4">
+                            <p class="font-medium text-lg">{{ project.project_name }} <span class="text-sm">({{ project.project_key }})</span></p>
+                            <span v-if="project.start_date && project.end_date">Từ {{ dayjs(project.start_date).format('DD/MM/YYYY') }} tới {{ dayjs(project.end_date).format('DD/MM/YYYY') }}</span>
+                        </div>
                     </TabPanel>
                     <TabPanel value="1">
                         <div class="m-4">
                             <p class="text-lg font-medium">Thành viên dự án</p>
                         </div>
+                        <Dialog v-model:visible="confirmDialog" header="Bạn có chắc chắn không?" :style="{ width: '40vw' }" :draggable="false" :modal="true">
+                            <p class="text-center">Bạn có chắc chắn xóa {{ selectedMember.user.username }} khỏi dự án</p>
+                            <div class="flex justify-center items-center my-8 gap-2">
+                                <Button icon="pi pi-times" label="Không" @click="confirmDialog = false"/>
+                                <Button icon="pi pi-trash" label="Chắc chắn" severity="danger" @click="delMember"/>
+                            </div>
+                        </Dialog>
                         <div class="m-4">
                             <table class="w-full text-sm tr-border mb-4">
                                 <thead>
@@ -48,12 +55,21 @@
                                             <td class="px-3 py-2">{{ member.user.username }}</td>
                                             <td class="px-3 py-2">{{ member.user.email }}</td>
                                             <td class="px-3 py-2">
-                                                {{ member.project_role }}
+                                                {{ member.project_role == 'PManager' ? 'Quản lý dự án' : 'Thành viên dự án'}}
+                                                <Button
+                                                    v-if="userStore.isSystemAdmin"
+                                                    icon="pi pi-pencil"
+                                                    rounded
+                                                    text
+                                                    size="small"
+                                                    @click="editMemberRole(member)"
+                                                    class="text-blue-500"
+                                                />
                                             </td>
                                             <td class="px-3 py-2">{{ dayjs(member.created_at).format('DD/MM/YYYY HH:mm') }}</td>
-                                            <template v-if="userStore.isSystemAdmin || (!userStore.isSystemAdmin && userStore.role === 'manager' && member.project_role !== 'PM')">
+                                            <template v-if="userStore.isSystemAdmin || (!userStore.isSystemAdmin && userStore.isProjectManager && member.project_role !== 'PManager')">
                                                 <td class="px-3 py-2">
-                                                    <Button icon="pi pi-trash" size="small" severity="danger" @click="deleteMember(member.id)"/>
+                                                    <Button icon="pi pi-trash" size="small" severity="danger" @click="openConfirmDialog(member)"/>
                                                 </td>
                                             </template>
                                             <template v-else>
@@ -76,7 +92,7 @@
                     <TabPanel value="2">
                         <div class="m-4 flex items-center justify-between">
                             <p class="text-lg font-medium">Danh mục</p>
-                            <template v-if="userStore.isSystemAdmin || userStore.role == 'manager'">
+                            <template v-if="userStore.isSystemAdmin || userStore.projectRole == 'PManager'">
                                 <Button label="Thêm" icon="pi pi-plus" rounded variant="outlined" @click="openCategoryDialog('add')"/>
                             </template>
                             <Dialog v-model:visible="openAddTaskCategory" :style="{width: '50vw'}" @hide="onDialogHide" :header="isEditCategory ? 'Chỉnh sửa danh mục' : 'Tạo mới danh mục'" :draggable="false" :modal="true">
@@ -117,17 +133,17 @@
                                     <template v-for="(issue, index) in issues" :key="issue.id">
                                         <tr class="hover:bg-gray-100 cursor-default">
                                             <td class="px-3 py-2">{{ index + 1 }}</td>
-                                            <td class="px-3 py-2">{{ issue.issue_type }}</td>
+                                            <td class="px-3 py-2">{{ issue.category_type }}</td>
                                             <td class="px-3 py-2">
                                                 <div class="flex items-center justify-center gap-2">
-                                                    <div :style="{ backgroundColor: issue.issue_color }" class="p-4 w-2 h-2 rounded-full"></div>
+                                                    <div :style="{ backgroundColor: issue.category_color }" class="p-4 w-2 h-2 rounded-full"></div>
                                                     <span>
-                                                        {{ issue.issue_color }}
+                                                        {{ issue.category_color }}
                                                     </span>
                                                 </div>
                                             </td>
                                             <td class="px-3 py-2">{{ dayjs(issue.created_at).format('DD/MM/YYYY HH:mm') }}</td>
-                                            <template v-if="userStore.isSystemAdmin || userStore.role == 'manager'">
+                                            <template v-if="userStore.isSystemAdmin || userStore.projectRole == 'PManager'">
                                                 <td class="px-3 py-2 flex gap-2 items-center justify-center">
                                                     <Button icon="pi pi-pencil" size="small" severity="info" @click="openCategoryDialog('update', issue)"/>
                                                     <Button icon="pi pi-trash" size="small" severity="danger" @click="deleteCategory(issue.id)"/>
@@ -153,7 +169,7 @@
                     <TabPanel value="3">
                         <div class="m-4 flex items-center justify-between">
                             <p class="text-lg font-medium">Trạng thái</p>
-                            <template v-if="userStore.isSystemAdmin || userStore.role == 'manager'">
+                            <template v-if="userStore.isSystemAdmin || userStore.projectRole == 'PManager'">
                                 <Button label="Thêm" icon="pi pi-plus" rounded variant="outlined" @click="openStatusDialog('add')" />
                             </template>
                             <Dialog v-model:visible="openAddTaskStatus" :style="{width: '50vw'}" @hide="onDialogHide" :header="isEditStatus ? 'Chỉnh sửa trạng thái' : 'Tạo mới trạng thái'" :draggable="false" :modal="true">
@@ -203,7 +219,7 @@
                                                 </div>
                                             </td>
                                             <td class="px-3 py-2">{{ dayjs(status.created_at).format('DD/MM/YYYY HH:mm') }}</td>
-                                            <template v-if="userStore.isSystemAdmin || userStore.role == 'manager'">
+                                            <template v-if="userStore.isSystemAdmin || userStore.projectRole == 'PManager'">
                                                 <td class="px-3 py-2 flex gap-2 items-center justify-center">
                                                     <Button icon="pi pi-pencil" size="small" severity="info" @click="openStatusDialog('update', status)"/>
                                                     <Button icon="pi pi-trash" size="small" severity="danger" @click="deleteStatus(status.id)"/>
@@ -264,6 +280,7 @@ const openAddTaskCategory = ref(false);
 const openAddTaskStatus = ref(false);
 const isEditCategory = ref(false);
 const isEditStatus = ref(false)
+const confirmDialog = ref(false);
 
 const isCategoryLoading = ref(false);
 const isStatusLoading = ref(false);
@@ -278,8 +295,8 @@ function openCategoryDialog(mode, data = null) {
     } else {
         isEditCategory.value = true;
         category_id.value = data.id;
-        category_type.value = data.issue_type;
-        category_color.value = data.issue_color;
+        category_type.value = data.category_type;
+        category_color.value = data.category_color;
         openAddTaskCategory.value = true;
     }
 }
@@ -300,6 +317,11 @@ function openStatusDialog(mode, data = null) {
     }
 }
 
+function openConfirmDialog(member) {
+    selectedMember.value = member;
+    confirmDialog.value = true;
+}
+
 function onDialogHide() {
     category_id.value = '';
 
@@ -315,6 +337,9 @@ const status_id = ref('');
 const status_type = ref('');
 const status_color = ref('');
 
+//member data
+const selectedMember = ref({});
+
 async function getProject() {
     try {
         const response = await api.get('project/detail', {
@@ -324,6 +349,7 @@ async function getProject() {
         })
 
         project.value = response.data.project;
+        userStore.setProjectContext(project.value.id);
     } catch (error) {
         console.log(error.message);
     }
@@ -392,8 +418,8 @@ async function addCategory() {
         const color = `#${category_color.value}`
         const response = await api.post('project/createProjectIssue', {
             project_id: project.value.id,
-            issue_type: category_type.value,
-            issue_color: color,
+            category_type: category_type.value,
+            category_color: color,
         })
         
         const result = response.data;
@@ -418,8 +444,8 @@ async function updateCategory() {
         const color = `#${category_color.value}`
         const response = await api.post('project/updateProjectIssue', {
             issue_id: category_id.value,
-            issue_type: category_type.value,
-            issue_color: color,
+            category_type: category_type.value,
+            category_color: color,
         })
         
         const result = response.data;
@@ -489,6 +515,26 @@ async function updateStatus() {
         isStatusLoading.value = false;
     } finally {
         isStatusLoading.value = false;
+    }
+}
+
+async function delMember() {
+    try {
+        const response = await api.post('/project/member/delete', {
+            project_id: project.value.id,
+            user_id: selectedMember.value.user_id,
+        })
+
+        const result = response.data;
+        if (result.success) {
+            toast.success(result.message, 'Thông báo');
+            confirmDialog.value = false;
+            getProjectMembers();
+        } else {
+            toast.error(result.message, 'Lỗi')
+        }
+    } catch (error) {
+        console.log(error.message);
     }
 }
 

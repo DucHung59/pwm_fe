@@ -53,14 +53,12 @@
         </div>
         <div class="content">
             <div v-if="!isLoading">
-                <div class="space" v-if="activeSetting == 'space'">
-                    Space page
-                </div>
-                <div class="info" v-if="activeSetting == 'info'">
-                    Info page
-                </div>
-                <div class="email" v-if="activeSetting == 'email'">
-                    Email page
+                <div class="info " v-if="activeSetting == 'info'">
+                    <label class="font-medium">Tên workspace hiện tại: {{ workspace.workspace_name }}</label>
+                    <div class="flex gap-2 items-center my-4">
+                        <label for="">Chỉnh sửa tên workspace</label>
+                        <InputText v-model="workspace_name"/>
+                    </div>
                 </div>
                 <div class="member" v-if="activeSetting == 'member'">
                     <p class="text-2xl font-semibold">Danh sách thành viên <span class="text-sm text-gray-500">({{ members.length }} Người)</span></p>
@@ -121,8 +119,9 @@
                                 <Button
                                     label="Lưu"
                                     icon="pi pi-check"
-                                    :loading="isUpdatingRole"
-                                    @click="updateMemberRole"
+                                    :loading="isUpdateRole"
+                                    loadingIcon="pi pi-spin pi-spinner"
+                                    @click="changeMemberRole"
                                     rounded
                                     size="small"
                                     class="mt-2"
@@ -246,7 +245,7 @@
                                                     <Button label="Tới" icon="pi pi-arrow-up-right" iconPos="right" size="small"/>
                                                 </RouterLink>
                                             </template>
-                                            <Button label="Xóa" icon="pi pi-trash" size="small" iconPos="right" severity="danger"/>
+                                            <Button label="Xóa" icon="pi pi-trash" size="small" iconPos="right" severity="danger" v-if="userStore.user.id = project.created_by"/>
                                         </td>
                                     </tr>
                                 </template>
@@ -271,7 +270,7 @@
 </template>
 <script setup>
 import api from '@/api/axios';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useUserStore } from '@/store/user';
 import { Button, Dialog, InputText, Message, RadioButton, useToast, Paginator } from 'primevue';
 import dayjs from 'dayjs';
@@ -280,9 +279,10 @@ import { toastService } from '@/assets/js/toastHelper';
 //Store
 const userStore = useUserStore();
 const workspace = ref(userStore.workspace);
+const workspace_name = ref();
 
 //Handle UI
-const activeSetting = ref('space');
+const activeSetting = ref('info');
 const isLoading = ref(false);
 const toast = new toastService(useToast());
 const isInviteMemberLoading = ref(false);
@@ -305,6 +305,7 @@ const inviteMembers = ref([]);
 const selectedMember = ref(null);
 const openEditRoleDialog = ref(false);
 const editedRole = ref('');
+const isUpdateRole = ref(false)
 
 function editMemberRole(member) {
   selectedMember.value = member;
@@ -317,9 +318,6 @@ function setActive(setting) {
     if (activeSetting.value === setting) return
     activeSetting.value = setting
     switch (setting) {
-        case 'space':
-            //call api
-            break;
         case 'info':
             break;
         case 'email':
@@ -447,12 +445,34 @@ async function getProjects() {
         currentPage.value = result.projects.current_page;
     } catch (error) {
         console.log(error.message);
-        
     } finally {
         isLoading.value = false;
+        openEditRoleDialog.value = false;
     }
 }
 
+async function changeMemberRole(){
+    try {
+        isUpdateRole.value = true
+        const response = await api.post('/workspace/change-member-role', {
+            user_id: selectedMember.value.user_id,
+            workspace_id: workspace.value.id,
+            new_role: editedRole.value,
+        })
+        const result = response.data;
+        if(result.success) {
+            toast.success('Chỉnh sửa thành công', 'Thông báo');
+            getMembers();
+            openEditRoleDialog.value = false;
+        } else {
+            toast.error(result.message, 'Lỗi')
+        }
+    } catch (error) {
+        console.log(error.message);
+    } finally {
+        isUpdateRole.value = false
+    }
+}
 
 watch(newMemberEmail, (newVal) => {
     emailValid.value = false;

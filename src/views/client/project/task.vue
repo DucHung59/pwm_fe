@@ -18,7 +18,7 @@
                         <label class="font-medium" for="selectStatus">Trạng thái:</label>
                         <SelectButton id="selectStatus" v-model="statusFilter" :options="statuses" optionLabel="status_type" optionValue="id" @change="onStatusChange" />
                     </div>
-                    <div v-if="userStore.isSystemAdmin || userStore.role == 'manager'" class="flex items-center gap-2">
+                    <div v-if="userStore.isSystemAdmin || userStore.projectRole == 'PManager'" class="flex items-center gap-2">
                         <label class="font-medium" for="isDelEnabel">Đã xóa:</label>
                         <ToggleButton id="isDelEnabel" v-model="isDelEnable" onLabel="On" offLabel="Off" @change="isDelChange"/>
                     </div>
@@ -27,7 +27,7 @@
                     <div class="m-4 flex items-center gap-2">
                         <div class="flex flex-col gap-1 mx-4">
                             <label for="" class="font-medium">Danh mục</label>
-                            <Select v-model="categoryFilter" :options="issues" optionLabel="issue_type" optionValue="id" class="w-40" />
+                            <Select v-model="categoryFilter" :options="issues" optionLabel="category_type" optionValue="id" class="w-40" />
                         </div>
                         <div class="flex flex-col gap-1 mx-4">
                             <label for="" class="font-medium">Assignee</label>
@@ -68,11 +68,10 @@
                             <template v-else>
                                 <template v-for="(task, index) in tasks">
                                     <tr class="cursor-default hover:bg-cyan-100">
-                                        
                                             <td class="text-center py-3"> 
                                                 <span class="px-4 py-1 text-white font-medium rounded-full" 
-                                                    :style="{ backgroundColor: task.issue_type.issue_color }">
-                                                    {{task.issue_type.issue_type}}
+                                                    :style="{ backgroundColor: task.category_info.category_color }">
+                                                    {{task.category_info.category_type}}
                                                 </span>
                                             </td>
                                             <td class="text-center py-3">
@@ -93,7 +92,7 @@
                                             </td>
                                             <td class="text-center py-3">{{ task.assignee_user ? task.assignee_user.username : 'Không có' }}</td>
                                             <td class="text-center py-3">{{ task.due_date ? formatDate(task.due_date) : "Không có" }}
-                                                <FlameIcon v-if="task.due_date && dayjs(task.due_date).isBefore(dayjs(), 'day')"/>
+                                                <FlameIcon v-if="task.due_date && dayjs(task.due_date).isBefore(dayjs(), 'day') && task.status_info.status_type != 'Closed'"/>
                                             </td>
                                             <td class="text-center py-3">{{ formatDate(task.created_at) }}</td>
                                             <td class="text-center py-3">{{ task.creator.username }}</td>
@@ -192,6 +191,7 @@ async function getProject() {
         project.value = response.data.project;
         statuses.value = response.data.statuses;
         issues.value = response.data.issues;
+        await userStore.setProjectContext(project.value.id);
     } catch (error) {
         console.log('Có lỗi xảy ra: ' + error.message);
     }

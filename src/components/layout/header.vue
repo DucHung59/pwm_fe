@@ -49,13 +49,13 @@
                     <Button class="icon-button btn-user-action" icon="pi pi-ellipsis-h" variant="text" rounded @click="toggleWorkspaceAction"/>
                     <ul class="action-container " :class="{active : isUserAction}">
                         <li class="action-item">
-                            <RouterLink to="members">
-                                Members
+                            <RouterLink to="/workspace/members">
+                                Thành viên
                             </RouterLink>
                         </li>
                         <li class="action-item">
                             <RouterLink>
-                                Issues
+                                Công việc
                             </RouterLink>
                         </li>
                     </ul>
@@ -74,7 +74,7 @@
                         <ul class="action-container " :class="{active : isUserProfile}">
                             <li class="action-item has-paragraph"><p class="text-[12px]">Hello, {{userStore.user.username}}</p></li>
                             <li class="action-item">
-                                <RouterLink>    
+                                <RouterLink :to="`/workspace/activity/${userStore.user.id}/${userStore.user.username}`">    
                                     Hoạt động
                                 </RouterLink>
                             </li> 
